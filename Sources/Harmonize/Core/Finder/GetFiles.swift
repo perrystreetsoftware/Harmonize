@@ -62,6 +62,10 @@ internal final class GetFiles {
         inclusions: [String],
         exclusions: [String]
     ) -> [SwiftSourceCode] {
+        if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path {
+            assert(!url.absoluteString.contains(documentsPath), "Harmonize does not work in the Documents folder because of MacOS sandboxing")
+        }
+
         let urls = FileManager.default.enumerator(
             at: url,
             includingPropertiesForKeys: nil,
