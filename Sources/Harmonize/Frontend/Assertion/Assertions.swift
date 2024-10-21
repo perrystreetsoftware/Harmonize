@@ -9,7 +9,6 @@ import Foundation
 import HarmonizeSemantics
 import SwiftSyntax
 import XCTest
-import Testing
 
 /// An experimental extension providing assertions API for `Array` where `Element` conforms to `SyntaxNodeProviding`.
 /// These utilities enable behavior-driven assertions on the elements of the array, such as checking conditions, count, and emptiness.
