@@ -28,8 +28,8 @@ public protocol FunctionCallsProviding {
 public extension FunctionCallsProviding {
     /// Checks if any of the function calls matches a list of specified function names ignoring arguments and ().
     ///
-    /// - Parameter functions: An array of function names to check.
-    /// - Returns: A Boolean value indicating whether any of the functions in the list have been invoked.
+    /// - parameter functions: An array of function names to check.
+    /// - returns: A Boolean value indicating whether any of the functions in the list have been invoked.
     func invokes(_ functions: [String]) -> Bool {
         return functionCalls.contains(where: {
             functions.contains($0.call)
@@ -38,17 +38,22 @@ public extension FunctionCallsProviding {
 
     /// Checks if a specific function name has been invoked.
     ///
-    /// - Parameter function: The name of the function to check.
-    /// - Returns: A Boolean value indicating whether the specified function has been invoked.
+    /// - parameter function: The name of the function to check.
+    /// - returns: A Boolean value indicating whether the specified function has been invoked.
     func invokes(_ function: String) -> Bool {
         return invokes([function])
     }
 
     /// Checks if any function call satisfies a given predicate.
     ///
-    /// - Parameter predicate: A closure that takes a `FunctionCall` object and returns a Boolean value.
-    /// - Returns: A Boolean value indicating whether any function call satisfies the given predicate.
+    /// - parameter predicate: A closure that takes a `FunctionCall` object and returns a Boolean value.
+    /// - returns: A Boolean value indicating whether any function call satisfies the given predicate.
     func invokes(where predicate: (FunctionCall) -> Bool) -> Bool {
         return functionCalls.contains(where: predicate)
+    }
+    
+    /// Returns true if there are any function calls happening in this declaration.
+    func hasFunctionCalls() -> Bool {
+        return !functionCalls.isEmpty
     }
 }
