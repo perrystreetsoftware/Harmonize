@@ -39,6 +39,7 @@ extension Initializer: AttributesProviding,
                        ParametersProviding,
                        VariablesProviding,
                        FunctionsProviding,
+                       StatementsProviding,
                        SourceCodeProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
@@ -47,7 +48,11 @@ extension Initializer: AttributesProviding,
     public var body: String? {
         node.body?.statements.toString()
     }
-    
+
+    public var statements: [String] {
+        node.body?.statements.map { $0.trimmedDescription } ?? []
+    }
+
     public var modifiers: [Modifier] {
         node.modifiers.modifiers
     }
