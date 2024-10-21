@@ -249,4 +249,24 @@ final class FiltersTests: XCTestCase {
             .withBody(containing: "wrong_regex")
             .assertEmpty()
     }
+    
+    func testFunctionCallProvidingFilters() throws {
+        Harmonize.on {
+            """
+            func example() {
+              func call() {}
+            
+              call()
+            }
+            """
+        }.functions().assertTrue { $0.hasFunctionCalls() }
+        
+        Harmonize.on {
+            """
+            func example() {
+              // no-op
+            }
+            """
+        }.functions().assertFalse { $0.hasFunctionCalls() }
+    }
 }

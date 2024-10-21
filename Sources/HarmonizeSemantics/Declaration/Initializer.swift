@@ -39,7 +39,8 @@ extension Initializer: AttributesProviding,
                        ParametersProviding,
                        VariablesProviding,
                        FunctionsProviding,
-                       SourceCodeProviding {
+                       SourceCodeProviding,
+                       FunctionCallsProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
     }
@@ -72,5 +73,9 @@ extension Initializer: AttributesProviding,
     
     public var functions: [Function] {
         declarations.as(Function.self)
+    }
+    
+    public var functionCalls: [FunctionCall] {
+        declarations.as(FunctionCall.self)
     }
 }

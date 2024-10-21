@@ -42,6 +42,20 @@ final class InitializersTests: XCTestCase {
             self.property = property
         }
     }
+    
+    class ViewModel {
+        @Published public var state: Int
+        
+        init(stateHandler: StateHandler) {
+            self.state = 0
+            stateHandler.$state.map { $0 * 2 }.assign(to: &$state)
+            produceSideEffect()
+        }
+    
+        func produceSideEffect() {
+            // do something....
+        }
+    }
     """.parsed()
     
     private lazy var visitor = {
@@ -59,7 +73,7 @@ final class InitializersTests: XCTestCase {
     
     func testParseInitializers() throws {
         let initializers = visitor.initializers
-        XCTAssertEqual(initializers.count, 5)
+        XCTAssertEqual(initializers.count, 6)
     }
     
     func testParseInitializerModifiers() throws {
@@ -87,7 +101,7 @@ final class InitializersTests: XCTestCase {
         let params = initializers.flatMap { $0.parameters }
             .map { $0.name }
         
-        XCTAssertEqual(params, ["param1", "param2", "param1", "param2", "property", "property", "value"])
+        XCTAssertEqual(params, ["param1", "param2", "param1", "param2", "property", "property", "value", "stateHandler"])
     }
     
     
@@ -106,5 +120,12 @@ final class InitializersTests: XCTestCase {
         XCTAssertEqual(variable?.name, "_")
         XCTAssertEqual(variable?.isOfInferredType, true)
         XCTAssertEqual(variable?.initializerClause?.value, "bar")
+    }
+    
+    func testParseInitializersFunctionCalls() throws {
+        let initializers = visitor.initializers
+        let functionCalls = initializers.flatMap(\.functionCalls)
+        
+        XCTAssertEqual(functionCalls.count, 3)
     }
 }
