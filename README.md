@@ -1,5 +1,7 @@
 # 🧩 Harmonize
 
+[![Tests](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml)
+
 Harmonize is a Swift project with powerful linting capabilities, allowing developers to easily assert, validate, and harmonize code structure and architecture through declarative tests. It can enforce best practices to ensure a clean, maintainable, and consistent codebase aligned with your project guidelines.
 
 Harmonize lint rules are written as unit tests using [XCTest](https://developer.apple.com/documentation/xctest/) or [Quick](https://github.com/Quick/Quick).
