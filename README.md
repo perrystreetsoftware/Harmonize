@@ -1,42 +1,45 @@
 # 🧩 Harmonize
 
-Harmonize is a Swift project with linting powers, allowing developers to easily assert, validate and harmonize code structure and architecture with declarative tests, enforcing best practices to ensure clean, maintained and unified code aligned with your project guidelines.
+[![Tests](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml)
 
-Harmonize lint rules are written in the form of unit tests, using using [XCTest](https://developer.apple.com/documentation/xctest/) or [Quick](https://github.com/Quick/Quick).
+Harmonize is a Swift project with powerful linting capabilities, allowing developers to easily assert, validate, and harmonize code structure and architecture through declarative tests. It can enforce best practices to ensure a clean, maintainable, and consistent codebase aligned with your project guidelines.
+
+Harmonize lint rules are written as unit tests using [XCTest](https://developer.apple.com/documentation/xctest/) or [Quick](https://github.com/Quick/Quick).
 
 > [!WARNING]  
-> Harmonize is still being build in public and is being used internally. We consider it is still a early alpha version and its API is subject to change.
+> Harmonize is currently being developed in public and is used internally. It is considered an early alpha version, and its API is subject to change.
 
 ## Installation
 
-To Harmonize to be able to query your project files and provides the semantics API to your tests, you need to create a `.harmonize.yaml` config file at the root level of your project.
+### Swift Package Manager (SPM)
 
-> [!NOTE]  
-> We'll a build a CLI that will do this automatically for you, but for this alpha version this is a mandatory step.
-
-```YAML
-excludes:
-  - Package.swift
-```
-### SPM
+Add the following to your package dependencies:
 
 ```swift
 // Product Dependencies block
-.package(url: "https://github.com/perrystreetsoftware/harmonize.swift.git", branch: "main")
+.package(url: "https://github.com/perrystreetsoftware/harmonize.git", branch: "main")
 
 // Target dependencies block
-.product(name: "Harmonize", package: "Harmonize.swift")
+.product(name: "Harmonize", package: "Harmonize")
 ```
 
-We recommend importing `Harmonize` as part of your test target. While Harmonize can be used on any Swift Package that you have, you can also create a separate Swift Package for Harmonize Rules so you don't need to couple it with your code.
+We recommend importing `Harmonize` as part of your test target. While Harmonize can be used on any Swift package, you can also create a separate Swift package specifically for Harmonize rules to keep it decoupled from your main codebase.
 
-### Config file
+### Configuration File
 
-We support a `.harmonize.yaml` config file, and it is also mandatory to exist to Harmonize to work property. The only support config for now is the `excludes` that allows you to opt-out files or folders from your project.
+To enable Harmonize to query your project files and provide the semantics API for your tests, you need to create a `.harmonize.yaml` configuration file at the root level of your project. Currently, the only supported configuration is `excludes`, which allows you to exclude specific files or folders from your project.
+
+```yaml
+excludes:
+  - Package.swift
+```
+
+> [!NOTE]  
+> We plan to build a CLI that will automate this process, but for the alpha version, this step is mandatory.
 
 ## Usage
 
-Harmonize is simple as writing a unit test.
+Using Harmonize is as simple as writing a unit test.
 
 ```swift
 import XCTest
@@ -56,15 +59,15 @@ final class ViewModelsTests: XCTestCase {
 
 ## Contributing
 
-Anyone can contribute to this project with Pull Requests, issues, or feedback you find relevant. We are yet to build the code of conduct tho.
+Contributions are welcome through pull requests, issues, or feedback. We are still working on building a code of conduct.
 
 ## Considerations
 
-This project is highly inspired by [SwiftLint](https://github.com/realm/SwiftLint/tree/main) and [Konsist](https://github.com/LemonAppDev/konsist) (A Kotlin project and where this idea initially came from).
+This project is heavily inspired by [SwiftLint](https://github.com/realm/SwiftLint/tree/main) and [Konsist](https://github.com/LemonAppDev/konsist) (a linter for Kotlin where this idea originated).
 
-We consider this project as being a companion to your preferred compile-time linter as you can write your custom lint rules to spread your team and project architectural alignments using unit tests.
+We see this project as a companion to your preferred compile-time linter, allowing you to create custom lint rules that align with your team and project architecture using unit tests.
 
-Our Semantics module is built using [Swift Syntax](https://github.com/swiftlang/swift-syntax) to parse the language Abstract Syntax Tree (AST) is inspired by the now archived [SwiftDocc Semantics](https://github.com/swiftlang/swift-docc).
+Our Semantics module, built using [Swift Syntax](https://github.com/swiftlang/swift-syntax) to parse the language Abstract Syntax Tree (AST), is inspired by the now-archived [SwiftDocc Semantics](https://github.com/swiftlang/swift-docc).
 
 > [!NOTE]  
-> We are also aware of potential performance problems when querying big codebases and parsing the AST. We're still working to improve this and make Harmonize faster.
+> We are aware of potential performance issues when querying large codebases and parsing the AST. We are continuously working on improvements to make Harmonize faster.
