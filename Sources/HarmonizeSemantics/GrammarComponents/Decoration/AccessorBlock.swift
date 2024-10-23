@@ -43,8 +43,8 @@ public extension AccessorBlock {
 
 // MARK: - Providers
 extension AccessorBlock: BodyProviding {
-    public var body: String? {
-        node.body?.statements.toString()
+    public var body: Body? {
+        Body(node: node.body?.statements)
     }
 }
 

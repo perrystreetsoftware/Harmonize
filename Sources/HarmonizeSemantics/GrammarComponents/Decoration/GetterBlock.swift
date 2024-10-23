@@ -30,8 +30,8 @@ public struct GetterBlock: DeclarationDecoration, SyntaxNodeProviding {
 // MARK: - BodyProviding Comformance
 
 extension GetterBlock: BodyProviding {
-    public var body: String? {
-        node.toString()
+    public var body: Body? {
+        Body(node: node)
     }
 }
 

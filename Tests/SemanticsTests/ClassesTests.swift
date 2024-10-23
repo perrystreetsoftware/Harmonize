@@ -80,6 +80,6 @@ final class ClassesTests: XCTestCase {
         
         XCTAssertEqual(functions.count, 1)
         XCTAssertEqual(functions.map { $0.name }, ["foo"])
-        XCTAssertEqual(functions.map { $0.body }, ["let make = 42"])
+        XCTAssertEqual(functions.map { $0.body?.content }, ["let make = 42"])
     }
 }

@@ -39,18 +39,13 @@ extension Initializer: AttributesProviding,
                        ParametersProviding,
                        VariablesProviding,
                        FunctionsProviding,
-                       StatementsProviding,
                        SourceCodeProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
     }
 
-    public var body: String? {
-        node.body?.statements.toString()
-    }
-
-    public var statements: [String] {
-        node.body?.statements.map { $0.trimmedDescription } ?? []
+    public var body: Body? {
+        Body(node: node.body?.statements)
     }
 
     public var modifiers: [Modifier] {

@@ -107,4 +107,28 @@ final class InitializersTests: XCTestCase {
         XCTAssertEqual(variable?.isOfInferredType, true)
         XCTAssertEqual(variable?.initializerClause?.value, "bar")
     }
+
+    func testParseInitializersNilBody() throws {
+        let initializers = visitor.protocols.flatMap(\.initializers)
+
+        XCTAssertTrue(initializers.allSatisfy { $0.body == nil })
+    }
+
+    func testParseInitializersBodyContent() throws {
+        let initializer = visitor.structs.flatMap(\.initializers).first
+        let initializerContent = initializer?.body?.content
+
+        let content = """
+        self.property = property
+        var _ = "bar"
+        """
+        XCTAssertEqual(initializerContent, content)
+    }
+
+    func testParseInitializersBodyLines() throws {
+        let initializer = visitor.structs.flatMap(\.initializers).first
+        let initializerLines = initializer?.body?.lines
+        let lines = ["self.property = property", "var _ = \"bar\""]
+        XCTAssertEqual(initializerLines, lines)
+    }
 }
