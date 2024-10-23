@@ -16,20 +16,32 @@ public extension Array where Element: Declaration & BodyProviding {
     /// - parameter predicate: A closure that takes a `String` representing the body of the element and returns
     ///   a Boolean value indicating whether the body meets the criteria.
     /// - returns: An array of elements whose body matches the specified predicate.
-    func withBody(_ predicate: (String) -> Bool) -> [Element] {
+    func withBodyContent(_ predicate: (String) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body.content)
         }
     }
-    
+
+    /// Filters the array to include only elements with a body that satisfies the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes a `[String]` representing the body of the element and returns
+    ///   a Boolean value indicating whether the body meets the criteria.
+    /// - returns: An array of elements whose body matches the specified predicate.
+    func withStatements(_ predicate: ([String]) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body.statements)
+        }
+    }
+
     /// Filters the array to include only elements with a body that contains the specified regex pattern.
     ///
     /// - parameter regex: A regex pattern to match against the body of the element.
     /// - returns: An array of elements whose body contains the specified regex pattern.
     @available(iOS 16.0, macOS 13.0, *)
-    func withBody(containing regex: some RegexComponent) -> [Element] {
-        withBody { $0.contains(regex) }
+    func withBodyContent(containing regex: some RegexComponent) -> [Element] {
+        withBodyContent { $0.contains(regex) }
     }
     
     /// Filters the array to include only elements with a body that contains the specified regex pattern.
@@ -37,8 +49,8 @@ public extension Array where Element: Declaration & BodyProviding {
     ///
     /// - parameter regex: A regex pattern to match against the body of the element.
     /// - returns: An array of elements whose body contains the specified regex pattern.
-    func withBody(containing regex: String) -> [Element] {
-        withBody {
+    func withBodyContent(containing regex: String) -> [Element] {
+        withBodyContent {
             let range = NSRange(location: 0, length: $0.utf16.count)
             let regex = try? NSRegularExpression(pattern: regex)
             return regex?.firstMatch(in: $0, options: [], range: range) != nil
@@ -50,7 +62,7 @@ public extension Array where Element: Declaration & BodyProviding {
     /// - parameter predicate: A closure that takes a `String` representing the body of the element and returns
     ///   a Boolean value indicating whether the body meets the criteria.
     /// - returns: An array of elements whose body does not match the specified predicate.
-    func withoutBody(_ predicate: (String) -> Bool) -> [Element] {
-        withBody { !predicate($0) }
+    func withoutBodyContent(_ predicate: (String) -> Bool) -> [Element] {
+        withBodyContent { !predicate($0) }
     }
 }

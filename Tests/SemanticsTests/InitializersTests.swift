@@ -125,10 +125,10 @@ final class InitializersTests: XCTestCase {
         XCTAssertEqual(initializerContent, content)
     }
 
-    func testParseInitializersBodyLines() throws {
+    func testParseInitializersBodyStatements() throws {
         let initializer = visitor.structs.flatMap(\.initializers).first
-        let initializerLines = initializer?.body?.lines
-        let lines = ["self.property = property", "var _ = \"bar\""]
-        XCTAssertEqual(initializerLines, lines)
+        let initializerStatements = initializer?.body?.statements
+        let statements = ["self.property = property", "var _ = \"bar\""]
+        XCTAssertEqual(initializerStatements, statements)
     }
 }

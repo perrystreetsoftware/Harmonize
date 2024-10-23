@@ -27,9 +27,9 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         node.toString()
     }
 
-    /// An array of strings representing the body, with each string corresponding to a line
-    /// (i.e., statement) in the body. Each statement is trimmed of leading/trailing whitespace.
-    public var lines: [String] {
+    /// An array of strings representing the body, with each string corresponding to a statement
+    /// in the body. Each statement is trimmed of leading/trailing whitespace.
+    public var statements: [String] {
         node.map(\.trimmedDescription)
     }
 
