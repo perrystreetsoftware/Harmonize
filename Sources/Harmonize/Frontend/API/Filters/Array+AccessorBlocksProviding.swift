@@ -46,7 +46,7 @@ public extension Array where Element: Declaration & AccessorBlocksProviding {
         predicate: (String?) -> Bool
     ) -> [Element] {
         withAccessorBlock {
-            $0.modifier == accessorModifier ? predicate($0.body) : false
+            $0.modifier == accessorModifier ? predicate($0.body?.content) : false
         }
     }
 
@@ -64,7 +64,7 @@ public extension Array where Element: Declaration & AccessorBlocksProviding {
     /// indicating whether the body satisfies the condition.
     /// - returns: An array of elements whose getter blocks have a body that meets the predicate condition.
     func withGetter(_ predicate: (String?) -> Bool) -> [Element] {
-        withGetterBlock { predicate($0.body) }
+        withGetterBlock { predicate($0.body?.content) }
     }
 
     /// Filters the array by checking if the `get` accessor block's body satisfies the provided predicate.

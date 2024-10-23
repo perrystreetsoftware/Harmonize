@@ -119,16 +119,16 @@ final class FiltersTests: XCTestCase {
         let scope = Harmonize.productionCode().on("Fixtures/Filters/Body")
         
         scope.functions(includeNested: true)
-            .withBody { $0.contains("makeACall()") }
+            .withBodyContent { $0.contains("makeACall()") }
             .assertCount(count: 1)
         
         scope.functions(includeNested: true)
-            .withBody(containing: "makeACall\\(\\)")
+            .withBodyContent(containing: "makeACall\\(\\)")
             .assertCount(count: 1)
         
         if #available(iOS 16.0, macOS 13.0, *) {
             scope.functions(includeNested: true)
-                .withBody(containing: Regex {
+                .withBodyContent(containing: Regex {
                     "_"
                     ZeroOrMore { .whitespace }
                     "="
@@ -143,7 +143,7 @@ final class FiltersTests: XCTestCase {
         }
         
         scope.functions(includeNested: true)
-            .withoutBody { $0.contains("makeACall()") }
+            .withoutBodyContent { $0.contains("makeACall()") }
             .assertNotEmpty()
     }
     
@@ -246,7 +246,7 @@ final class FiltersTests: XCTestCase {
         
         Harmonize.productionCode().on("Fixtures/Filters/Body")
             .functions()
-            .withBody(containing: "wrong_regex")
+            .withBodyContent(containing: "wrong_regex")
             .assertEmpty()
     }
 }

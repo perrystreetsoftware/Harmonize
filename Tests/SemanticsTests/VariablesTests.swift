@@ -59,7 +59,10 @@ final class VariablesTests: XCTestCase {
         var example11: Int { 9 }
         var example12: Int = 2
         var example13: Int {
-            get { return example12 }
+            get {
+                print("a")
+                return example12
+            }
             set { example12 = newValue }
         }
     }
@@ -158,21 +161,33 @@ final class VariablesTests: XCTestCase {
         XCTAssertEqual(attributes, [.available, .objc, .published, .published])
     }
     
-    func testParseVariablesAccessorsBody() throws {
+    func testParseVariablesAccessorsBodyContent() throws {
         let variables = visitor.variables
-        let accessors = variables.flatMap { $0.accessors }.map { $0.body }
-        
+        let accessors = variables.flatMap { $0.accessors }.map { $0.body?.content }
+
+        let accessor1 = """
+        print("a")
+        return example12
+        """
+        let accessor2 = "example12 = newValue"
         XCTAssertEqual(accessors.count, 2)
-        XCTAssertEqual(
-            accessors,
-            ["return example12", "example12 = newValue"]
-        )
+        XCTAssertEqual(accessors, [accessor1, accessor2])
     }
-    
+
+    func testParseVariablesAccessorsBodyLines() throws {
+        let variables = visitor.variables
+        let accessors = variables.flatMap { $0.accessors }.map { $0.body?.statements }
+
+        let accessor1 = ["print(\"a\")", "return example12"]
+        let accessor2 = ["example12 = newValue"]
+        XCTAssertEqual(accessors.count, 2)
+        XCTAssertEqual(accessors, [accessor1, accessor2])
+    }
+
     func testParseVariablesGetterBody() throws {
         let variables = visitor.variables
-        let getter = variables.compactMap { $0.getter?.body }
-        
+        let getter = variables.compactMap { $0.getter?.body?.content }
+
         XCTAssertEqual(getter.count, 1)
         XCTAssertEqual(getter, ["9"])
     }

@@ -97,7 +97,7 @@ final class StructsTests: XCTestCase {
     func testParseStructsMemberFunctions() throws {
         let function = visitor.structs.first { $0.name == "MyStruct" }!.functions.first!
         XCTAssertEqual(function.name, "someFunction")
-        XCTAssertEqual(function.body, "property2 + 2")
+        XCTAssertEqual(function.body?.content, "property2 + 2")
     }
 
 }

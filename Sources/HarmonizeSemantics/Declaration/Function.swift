@@ -103,10 +103,10 @@ extension Function: NamedDeclaration,
         }
     }
     
-    public var body: String? {
-        node.body?.statements.toString()
+    public var body: Body? {
+        Body(node: node.body?.statements)
     }
-    
+
     public var functionCalls: [FunctionCall] {
         declarations.as(FunctionCall.self)
     }

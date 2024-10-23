@@ -44,10 +44,10 @@ extension Initializer: AttributesProviding,
         node.attributes.attributes
     }
 
-    public var body: String? {
-        node.body?.statements.toString()
+    public var body: Body? {
+        Body(node: node.body?.statements)
     }
-    
+
     public var modifiers: [Modifier] {
         node.modifiers.modifiers
     }
