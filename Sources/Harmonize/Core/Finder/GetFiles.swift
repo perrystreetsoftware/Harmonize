@@ -119,11 +119,15 @@ internal final class GetFiles {
             }
         }
         
+        if fileOrParentIsContainedInArray(array: exclusions) {
+            return false
+        }
+
         if !inclusions.isEmpty {
             return fileOrParentIsContainedInArray(array: inclusions)
         }
-        
-        return !fileOrParentIsContainedInArray(array: exclusions)
+                
+        return true
     }
     
     /// The class responsible for looking through a given directory URL
