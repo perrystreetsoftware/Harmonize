@@ -46,6 +46,12 @@ final class FunctionsTests: XCTestCase {
         return "return"
     }
 
+    func withPublished() -> AnyPublisher<Void, Never> {
+        $foo.flatMap { _ -> AnyPublisher<Void, Never> in
+            Just(()).eraseToAnyPublisher()
+        }.eraseToAnyPublisher()
+    }
+
     func withGenericVariance<T, R>(_ t: T, _ f: (T) -> R) -> R {
         f(t)
     }
@@ -244,7 +250,20 @@ final class FunctionsTests: XCTestCase {
         let function = named("withReturnClause")
         XCTAssertEqual(function.invokes("noLabelAtAll"), true)
     }
-    
+
+    func testTokens() throws {
+        let function = named("withPublished")
+        let fooTokens = function.functionCalls.first!.tokens(startingWith: "$foo")
+        let flatMapTokens = function.functionCalls.first!.tokens(startingWith: "flatMap")
+
+        XCTAssertEqual(fooTokens.count, 1)
+        XCTAssertEqual(fooTokens.first?.value, "$foo")
+        XCTAssertEqual(fooTokens.first?.position, 591)
+        XCTAssertEqual(flatMapTokens.count, 1)
+        XCTAssertEqual(flatMapTokens.first?.value, "flatMap")
+        XCTAssertEqual(flatMapTokens.first?.position, 601)
+    }
+
     private func named(_ name: String) -> Function {
         visitor.functions.first { $0.name == name }!
     }

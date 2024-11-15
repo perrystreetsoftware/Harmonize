@@ -37,7 +37,30 @@ public struct FunctionCall: Declaration, SyntaxNodeProviding {
             )
         }
     }
-    
+
+    public var tokens: [Token] {
+        return node.tokens(viewMode: .all)
+            .compactMap { token in
+                if case .identifier(let identifier) = token.tokenKind {
+                    return Token(value: identifier,
+                                 position: token.position.utf8Offset)
+                }
+                return nil
+            }
+    }
+
+    public func tokens(startingWith: String) -> [Token] {
+        return node.tokens(viewMode: .all)
+            .compactMap { token in
+                if case .identifier(let identifier) = token.tokenKind,
+                   identifier.starts(with: startingWith) {
+                    return Token(value: identifier,
+                                 position: token.position.utf8Offset)
+                }
+                return nil
+            }
+    }
+
     public var description: String {
         node.trimmedDescription
     }
@@ -72,6 +95,16 @@ public extension FunctionCall {
         /// This represents the value being passed to the function. For example, in `greet(name: "John")`,
         /// the `value` would be `"John"`.
         public let value: String
+    }
+
+    struct Token: Equatable {
+        /// The value of the token as a `String`.
+        ///
+        /// For example, `$publishedValue` or `.flatMap`
+        public let value: String
+
+        // Where in the source this token exists
+        public let position: Int
     }
 }
 
