@@ -93,7 +93,7 @@ final class FunctionsTests: XCTestCase {
         let functions = visitor.functions
         let functionNames = functions.map { $0.name }
         
-        XCTAssertEqual(functions.count, 15)
+        XCTAssertEqual(functions.count, 16)
         XCTAssertEqual(
             functionNames, 
             [
@@ -106,6 +106,7 @@ final class FunctionsTests: XCTestCase {
                 "noLabelVariadic",
                 "noLabelAtAll",
                 "withReturnClause",
+                "withPublished",
                 "withGenericVariance",
                 "withWhereClause",
                 "withParametersInitializers",
@@ -132,6 +133,7 @@ final class FunctionsTests: XCTestCase {
                 nil,
                 nil,
                 "String",
+                "AnyPublisher<Void, Never>",
                 "R",
                 "Int",
                 "Int",
