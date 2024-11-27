@@ -13,7 +13,14 @@ internal final class GetFiles {
     private let config: Config
 
     init(_ file: StaticString) {
-        self.workingDirectory = try! ResolveProjectWorkingDirectory()(file)
+        do {
+            self.workingDirectory = try ResolveProjectWorkingDirectory()(file)
+        } catch let error as Config.FileError {
+            fatalError(error.description)
+        } catch {
+            fatalError("Unable to resolve the project working directory due to \(error.localizedDescription).")
+        }
+        
         self.config = Config(file: file)
     }
     
@@ -62,10 +69,6 @@ internal final class GetFiles {
         inclusions: [String],
         exclusions: [String]
     ) -> [SwiftSourceCode] {
-        if let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.path {
-            assert(!url.absoluteString.contains(documentsPath), "Harmonize does not work in the Documents folder because of MacOS sandboxing")
-        }
-
         let urls = FileManager.default.enumerator(
             at: url,
             includingPropertiesForKeys: nil,
