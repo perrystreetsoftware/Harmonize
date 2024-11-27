@@ -35,7 +35,7 @@ public extension Config {
                 "Harmonize is unable to locate the `.harmonize.yaml` file. Did you create it in the top-level directory of your project?"
             case .noPermissionToViewFile:
                 """
-                Harmonize is unable to read the files of your project. This may be caused by Xcode's Sandboxing.
+                Harmonize is unable to read the files of your project. This may be caused by App Sandboxing.
                 If your project is located in the Documents folder, you can try moving it to another folder or you can also try disabling Sandboxing.
                 """
             }
