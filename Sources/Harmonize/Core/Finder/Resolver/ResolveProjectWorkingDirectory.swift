@@ -26,6 +26,10 @@ internal final class ResolveProjectWorkingDirectory {
             startingDirectory.standardize()
 
             if configFileExists(at: startingDirectory) {
+                if !configFileIsReadable(at: startingDirectory) {
+                    throw Config.FileError.noPermissionToViewFile
+                }
+                
                 return startingDirectory
             }
         } while startingDirectory.path != "/"
@@ -37,5 +41,9 @@ internal final class ResolveProjectWorkingDirectory {
         FileManager.default.fileExists(
             atPath: url.appendingPathComponent(".harmonize.yaml").path
         )
+    }
+    
+    private func configFileIsReadable(at url: URL) -> Bool {
+        FileManager.default.isReadableFile(atPath: url.appendingPathComponent(".harmonize.yaml").path)
     }
 }
