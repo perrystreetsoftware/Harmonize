@@ -20,8 +20,16 @@
 /// Builder protocol to provide the functionality to exclude especific paths/folders/files from the Harmonize Scope.
 public protocol Excluding: HarmonizeScope {
     /// The `excluding` builder method to filter out Files/Folders from the Harmonize Scope.
+    /// Note that if you pass a string with a trailing `*` it will treat it as a wildcard against the filename
     ///
     /// - Parameter excludes: files, paths or folders to be excluded.
     /// - Returns: ``HarmonizeScope``.
     func excluding(_ excludes: String...) -> HarmonizeScope
+
+    /// The `excluding` builder method to filter out Files/Folders from the Harmonize Scope.
+    /// Note that if you pass a string with a trailing `*` it will treat it as a wildcard against the filename
+    ///
+    /// - Parameter excludes: files, paths or folders to be excluded.
+    /// - Returns: ``HarmonizeScope``.
+    func excluding(_ excludes: [String]) -> HarmonizeScope
 }
