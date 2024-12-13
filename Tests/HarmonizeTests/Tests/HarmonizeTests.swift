@@ -90,4 +90,13 @@ final class HarmonizeTests: XCTestCase {
         XCTAssertTrue(!prodScope.sources().isEmpty)
         XCTAssertTrue(prodScope.sources().contains { !($0.fileName?.hasSuffix("Tests") == true) })
     }
+
+    func testCreatesScopesWithProductionAndTestCodeWildcardExclusion() throws {
+        let scope = productionAndTestCode.excluding("UseCase*")
+        let fileNames = scope.sources().map { $0.fileName }
+
+        for excluded in ["UseCasesTests.swift", "UseCases.swift"] {
+            XCTAssert(!fileNames.contains(excluded), "\(excluded) found in \(fileNames)")
+        }
+    }
 }
