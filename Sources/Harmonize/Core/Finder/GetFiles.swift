@@ -129,7 +129,13 @@ internal final class GetFiles {
                 if element.hasSuffix(".swift") {
                     return element == file.lastPathComponent
                 }
-                
+                if element.hasSuffix("*") {
+                    let regexPattern = "^" + NSRegularExpression.escapedPattern(for: element)
+                        .replacingOccurrences(of: "\\*", with: ".*") + "$"
+
+                    return file.lastPathComponent.range(of: regexPattern, options: .regularExpression) != nil
+                }
+
                 return parentUrl.pathComponents.contains { $0.hasSuffix(element) }
             }
         }

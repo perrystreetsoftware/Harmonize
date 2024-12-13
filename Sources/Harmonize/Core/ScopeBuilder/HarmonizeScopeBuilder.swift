@@ -60,10 +60,15 @@ extension HarmonizeScopeBuilder: On {
 // MARK: - Excluding
 
 extension HarmonizeScopeBuilder: Excluding {
-     func excluding(_ excludes: String...) -> HarmonizeScope {
-         self.exclusions = excludes + exclusions
-         return self
-     }
+    func excluding(_ excludes: String...) -> HarmonizeScope {
+        self.exclusions = excludes + exclusions
+        return self
+    }
+
+    func excluding(_ excludes: [String]) -> HarmonizeScope {
+        self.exclusions = excludes + exclusions
+        return self
+    }
 }
 
 // MARK: - HarmonizeScope
