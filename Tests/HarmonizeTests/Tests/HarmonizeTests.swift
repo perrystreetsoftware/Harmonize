@@ -91,6 +91,14 @@ final class HarmonizeTests: XCTestCase {
         XCTAssertTrue(prodScope.sources().contains { !($0.fileName?.hasSuffix("Tests") == true) })
     }
 
+    func testChangingScopeBuilderParamsResetsCache() throws {
+        let initialSources = testCode.sources()
+        XCTAssertEqual(initialSources.count, 3)
+
+        let newSources = testCode.excluding("MathTests.swift").sources()
+        XCTAssertEqual(newSources.count, 2)
+    }
+
     func testCreatesScopesWithProductionAndTestCodeWildcardExclusion() throws {
         let scope = productionAndTestCode.excluding("UseCase*")
         let fileNames = scope.sources().map { $0.fileName }

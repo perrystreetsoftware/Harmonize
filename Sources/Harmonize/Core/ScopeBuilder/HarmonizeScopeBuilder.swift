@@ -26,14 +26,29 @@ internal class HarmonizeScopeBuilder {
     private let file: StaticString
     private let getFiles: GetFiles
     
-    private var folder: String?
-    private var includingOnly: [String] = []
-    private var exclusions: [String] = []
-    
-    private lazy var files = {
-        getFiles(folder: folder, inclusions: includingOnly, exclusions: exclusions)
-    }()
-    
+    private var folder: String? {
+        didSet { filesCache = nil }
+    }
+    private var includingOnly: [String] = [] {
+        didSet { filesCache = nil }
+    }
+    private var exclusions: [String] = [] {
+        didSet { filesCache = nil }
+    }
+
+    private var filesCache: [SwiftSourceCode]?
+
+    var files: [SwiftSourceCode] {
+        if let cachedFiles = filesCache {
+            return cachedFiles
+        }
+
+        let newFiles = getFiles(folder: folder, inclusions: includingOnly, exclusions: exclusions)
+        filesCache = newFiles
+
+        return newFiles
+    }
+
     internal init(
         file: StaticString,
         folder: String? = nil,
