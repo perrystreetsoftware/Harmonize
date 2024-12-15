@@ -24,6 +24,62 @@ import HarmonizeSemantics
 /// providing filtering functionality based on body.
 public extension Array where Element: Declaration & BodyProviding {
     /// Filters the array to include only elements with a body that satisfies the given predicate.
+    func withBody(_ predicate: (Body) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body)
+        }
+    }
+    
+    func withoutBody(_ predicate: (Body) -> Bool) -> [Element] {
+        withBody { !predicate($0) }
+    }
+    
+    func withAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body.assignments)
+        }
+    }
+    
+    func withoutAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
+        withAssignments { !predicate($0) }
+    }
+    
+    func withFunctionCalls(_ predicate: ([FunctionCall]) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body.functionCalls)
+        }
+    }
+    
+    func withoutFunctionCalls(_ predicate: ([FunctionCall]) -> Bool) -> [Element] {
+        withFunctionCalls { !predicate($0) }
+    }
+    
+    func withIfs(_ predicate: ([If]) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body.ifs)
+        }
+    }
+    
+    func withoutIfs(_ predicate: ([If]) -> Bool) -> [Element] {
+        withIfs { !predicate($0 )}
+    }
+    
+    func withSwitches(_ predicate: ([Switch]) -> Bool) -> [Element] {
+        with(\.body) {
+            guard let body = $0 else { return false }
+            return predicate(body.switches)
+        }
+    }
+    
+    func withoutSwitches(_ predicate: ([Switch]) -> Bool) -> [Element] {
+        withSwitches { !predicate($0) }
+    }
+    
+    /// Filters the array to include only elements with a body that satisfies the given predicate.
     ///
     /// - parameter predicate: A closure that takes a `String` representing the body of the element and returns
     ///   a Boolean value indicating whether the body meets the criteria.

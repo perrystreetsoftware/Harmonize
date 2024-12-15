@@ -43,7 +43,7 @@ final class AssertionsFailuresTests: XCTestCase {
     }
 }
 
-fileprivate extension AssertionsFailuresTests {
+internal extension AssertionsFailuresTests {
     /// Adapted from original source:
     /// https://medium.com/@matthew_healy/cuteasserts-dev-blog-1-wait-how-do-you-test-that-a-test-failed-37419eb33b49
     final class ExpectedFailureTestCaseRun: XCTestCaseRun {
