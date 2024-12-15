@@ -20,13 +20,9 @@
 import SwiftSyntax
 
 /// A struct that represents a function call in Swift code.
-public struct FunctionCall: Declaration, SyntaxNodeProviding {
+public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     /// The syntax node representing the function call expression in the abstract syntax tree (AST).
     public let node: FunctionCallExprSyntax
-    
-    public let parent: Declaration?
-    
-    public let sourceCodeLocation: SourceCodeLocation
     
     /// The name of the function or expression being called.
     ///
@@ -48,6 +44,23 @@ public struct FunctionCall: Declaration, SyntaxNodeProviding {
                 value: $0.expression.trimmedDescription
             )
         }
+    }
+    
+    /// The trailing closure of the function call, if present.
+    ///
+    /// This property returns an optional ``Closure`` representing the trailing closure attached to the function call.
+    /// For example, in:
+    ///
+    /// ```swift
+    /// performTask {
+    ///     print("Task is running!")
+    /// }
+    /// ```
+    ///
+    /// The `closure` would represent the block of code `{ print("Task is running!") }`.
+    /// If no trailing closure is present, this property returns `nil`.
+    public var closure: Closure? {
+        Closure(node: node.trailingClosure)
     }
 
     public var tokens: [Token] {
@@ -77,14 +90,8 @@ public struct FunctionCall: Declaration, SyntaxNodeProviding {
         node.trimmedDescription
     }
     
-    internal init(
-        node: FunctionCallExprSyntax,
-        parent: Declaration?,
-        sourceCodeLocation: SourceCodeLocation
-    ) {
+    internal init(node: FunctionCallExprSyntax) {
         self.node = node
-        self.parent = parent
-        self.sourceCodeLocation = sourceCodeLocation
     }
 }
 
@@ -109,6 +116,10 @@ public extension FunctionCall {
         public let value: String
     }
 
+    /// A struct representing a single token that may be composing a function call.
+    ///
+    /// For example, in the function call `greet().$someObj.flatMap { }.`, we have two tokens: `$someObjc` and `.flatMap`
+    /// We still need to extend this in the future so that it is fully typed since a Token can be another FunctionCall or a reference and so on.
     struct Token: Equatable {
         /// The value of the token as a `String`.
         ///
@@ -122,15 +133,12 @@ public extension FunctionCall {
 
 // MARK: Capabilities Comformance
 
-extension FunctionCall: DeclarationsProviding,
-                        FunctionCallsProviding,
-                        ParentDeclarationProviding,
-                        SourceCodeProviding {
-    public var declarations: [Declaration] {
-        DeclarationsCache.shared.declarations(from: node)
-    }
-    
+extension FunctionCall: FunctionCallsProviding {
     public var functionCalls: [FunctionCall] {
-        declarations.as(FunctionCall.self)
+        node.children(viewMode: .all)
+            .compactMap {
+                $0.as(FunctionCallExprSyntax.self)
+            }
+            .map(FunctionCall.init(node:))
     }
 }

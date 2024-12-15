@@ -18,7 +18,13 @@
 //
 
 /// A protocol that represents declarations capable of providing a body.
-public protocol BodyProviding {
+public protocol BodyProviding: FunctionCallsProviding {
     /// The body of the declaration, if any.
     var body: Body? { get }
+}
+
+extension BodyProviding {
+    public var functionCalls: [FunctionCall] {
+        body?.functionCalls ?? []
+    }
 }

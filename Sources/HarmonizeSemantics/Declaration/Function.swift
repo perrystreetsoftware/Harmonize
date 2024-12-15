@@ -67,7 +67,6 @@ extension Function: NamedDeclaration,
                     BodyProviding,
                     ParametersProviding,
                     FunctionsProviding,
-                    FunctionCallsProviding,
                     SourceCodeProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
@@ -117,9 +116,5 @@ extension Function: NamedDeclaration,
     
     public var body: Body? {
         Body(node: node.body?.statements)
-    }
-
-    public var functionCalls: [FunctionCall] {
-        declarations.as(FunctionCall.self)
     }
 }

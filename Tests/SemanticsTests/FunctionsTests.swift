@@ -242,10 +242,13 @@ final class FunctionsTests: XCTestCase {
         XCTAssertEqual(functionBody, content)
     }
 
-    func testParseFunctionBodyStatements() throws {
-        let functionBody = named("withReturnClause").body?.statements
-        let lines = ["let cal = \"cal\"", "noLabelAtAll(cal)", "return \"return\""]
-        XCTAssertEqual(functionBody, lines)
+    func testParseFunctionBody() throws {
+        let functionBody = named("withReturnClause").body!
+        let statements = functionBody.statements
+        let functionCall = functionBody.functionCalls.first!
+        
+        XCTAssertEqual(statements.map(\.description), ["let cal = \"cal\"", "return \"return\""])
+        XCTAssertEqual(functionCall.call, "noLabelAtAll")
     }
 
     func testParseFunctionBodyFunctionCalls() throws {

@@ -6,10 +6,15 @@
 //
 
 import SwiftSyntax
+import SwiftOperators
 import SwiftParser
 
 extension String {
     func parsed() -> SourceFileSyntax {
-        Parser.parse(source: self)
+        let parsed = Parser.parse(source: self)
+        
+        return OperatorTable.standardOperators
+            .foldAll(parsed) { _ in }
+            .as(SourceFileSyntax.self) ?? parsed
     }
 }

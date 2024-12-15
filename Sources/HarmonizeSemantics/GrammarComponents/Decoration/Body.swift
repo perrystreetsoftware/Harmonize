@@ -39,22 +39,71 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         node.toString()
     }
 
-    /// An array of strings representing the body, with each string corresponding to a statement
+    /// An array of `Assignment` objects representing all assignments in the body of the declaration.
+    public let assignments: [Assignment]
+    
+    /// An array of `FunctionCall` objects representing all the top-level function call present in the body.
+    /// e.g `someFunc()` is included but `value = getValue()` is part of Assignment. We don't include nested calls for now.
+    public let functionCalls: [FunctionCall]
+    
+    /// An array of `If` objects representing all the if-conditions present in the body.
+    public let ifs: [If]
+    
+    /// An array of raw statement type representing the body, with each corresponding to a statement
     /// in the body. Each statement is trimmed of leading/trailing whitespace.
-    public var statements: [String] {
-        node.map(\.trimmedDescription)
-    }
-
+    public let statements: [Statement]
+    
+    /// An array of `Switch` all the switch statements present in the body.
+    public let switches: [Switch]
+    
     public var description: String {
         node.trimmedDescription
     }
 
     internal init(node: CodeBlockItemListSyntax) {
         self.node = node
+        
+        var assignments: [Assignment] = []
+        var functionCalls: [FunctionCall] = []
+        var ifs: [If] = []
+        var switches: [Switch] = []
+        var statements: [Statement] = []
+        
+        for child in node {
+            if let infixOperator = child.item.as(InfixOperatorExprSyntax.self) {
+                assignments.append(Assignment(node: infixOperator))
+                continue
+            }
+            
+            if let expressionStatement = child.item.as(ExpressionStmtSyntax.self) {
+                if let ifNode = expressionStatement.expression.as(IfExprSyntax.self) {
+                    ifs.append(If(node: ifNode))
+                    continue
+                }
+                
+                if let switchNode = expressionStatement.expression.as(SwitchExprSyntax.self) {
+                    switches.append(Switch(node: switchNode))
+                    continue
+                }
+            }
+            
+            if let functionCallNode = child.item.as(FunctionCallExprSyntax.self) {
+                functionCalls.append(FunctionCall(node: functionCallNode))
+                continue
+            }
+            
+            statements.append(Statement(node: child))
+        }
+        
+        self.assignments = assignments
+        self.functionCalls = functionCalls
+        self.ifs = ifs
+        self.switches = switches
+        self.statements = statements
     }
 
     internal init?(node: CodeBlockItemListSyntax?) {
         guard let node = node else { return nil }
-        self.node = node
+        self.init(node: node)
     }
 }

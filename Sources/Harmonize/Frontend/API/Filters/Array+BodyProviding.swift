@@ -43,7 +43,7 @@ public extension Array where Element: Declaration & BodyProviding {
     func withStatements(_ predicate: ([String]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
-            return predicate(body.statements)
+            return predicate(body.statements.map(\.description))
         }
     }
 
