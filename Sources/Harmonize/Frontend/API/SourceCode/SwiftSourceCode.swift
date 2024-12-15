@@ -31,7 +31,7 @@ public final class SwiftSourceCode {
         // Not ideal as it will break lazy evaluation of the Source File Syntax.
         // 'Fine' for this initial release, but we must rework this when Harmonize
         // evolves to be a 'File Query' over swift files.
-        SourceFileSyntaxResolver(source: self, node: sourceFileSyntax)
+        SourceFileSyntaxResolver(source: self, node: foldedSourceFileSyntax ?? sourceFileSyntax)
     }()
 
     /// The URL pointing to the Swift source file, if provided. Nil if `source` is provided directly as string.
@@ -160,7 +160,11 @@ extension SwiftSourceCode: Equatable, Hashable  {
 
 internal extension SwiftSourceCode {
     var sourceFileSyntax: SourceFileSyntax {
-        cachedSyntaxTree.get(self)
+        syntaxTreeCache.get(self)
+    }
+    
+    var foldedSourceFileSyntax: SourceFileSyntax? {
+        foldedSyntaxTreeCache.get(self)
     }
 }
 
