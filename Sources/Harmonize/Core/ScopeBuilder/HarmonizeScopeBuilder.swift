@@ -29,11 +29,34 @@ internal class HarmonizeScopeBuilder {
     private var folder: String?
     private var includingOnly: [String] = []
     private var exclusions: [String] = []
-    
-    private lazy var files = {
-        getFiles(folder: folder, inclusions: includingOnly, exclusions: exclusions)
-    }()
-    
+
+    // Generate a unique cache key based on the configuration
+    private func cacheKey(
+        folder: String?,
+        includingOnly: [String],
+        exclusions: [String]
+    ) -> String {
+        let folderKey = folder ?? "nil"
+        let inclusionsKey = includingOnly.joined(separator: ",")
+        let exclusionsKey = exclusions.joined(separator: ",")
+        return "\(folderKey)|\(inclusionsKey)|\(exclusionsKey)"
+    }
+
+    private var filesCache: [String: [SwiftSourceCode]] = [:]
+
+    private var files: [SwiftSourceCode] {
+        let key = cacheKey(folder: folder, includingOnly: includingOnly, exclusions: exclusions)
+
+        if let cachedFiles = filesCache[key] {
+            return cachedFiles
+        }
+
+        let newFiles = getFiles(folder: folder, inclusions: includingOnly, exclusions: exclusions)
+        filesCache[key] = newFiles
+
+        return newFiles
+    }
+
     internal init(
         file: StaticString,
         folder: String? = nil,
