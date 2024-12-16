@@ -1,5 +1,5 @@
 //
-//  FunctionsTests.swift
+//  InitializersTests.swift
 //  Harmonize
 //
 //  Copyright (c) Perry Street Software 2024. All Rights Reserved.
@@ -124,11 +124,13 @@ final class InitializersTests: XCTestCase {
         """
         XCTAssertEqual(initializerContent, content)
     }
-
-    func testParseInitializersBodyStatements() throws {
-        let initializer = visitor.structs.flatMap(\.initializers).first
-        let initializerStatements = initializer?.body?.statements
-        let statements = ["self.property = property", "var _ = \"bar\""]
-        XCTAssertEqual(initializerStatements, statements)
+    
+    func testParseFunctionBody() throws {
+        let body = visitor.structs.flatMap(\.initializers).first!.body!
+        let statements = body.statements
+        let assignment = body.assignments.first!
+        
+        XCTAssertEqual(statements.map(\.description), ["var _ = \"bar\""])
+        XCTAssertEqual(assignment.target, "self.property")
     }
 }

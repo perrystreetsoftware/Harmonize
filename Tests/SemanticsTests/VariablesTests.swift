@@ -1,5 +1,5 @@
 //
-//  FunctionsTests.swift
+//  VariablesTests.swift
 //  Harmonize
 //
 //  Copyright (c) Perry Street Software 2024. All Rights Reserved.
@@ -176,12 +176,11 @@ final class VariablesTests: XCTestCase {
 
     func testParseVariablesAccessorsBodyLines() throws {
         let variables = visitor.variables
-        let accessors = variables.flatMap { $0.accessors }.map { $0.body?.statements }
+        let bodies = variables.flatMap { $0.accessors }.compactMap { $0.body }
 
-        let accessor1 = ["print(\"a\")", "return example12"]
-        let accessor2 = ["example12 = newValue"]
-        XCTAssertEqual(accessors.count, 2)
-        XCTAssertEqual(accessors, [accessor1, accessor2])
+        XCTAssertEqual(bodies[0].functionCalls.count, 1)
+        XCTAssertEqual(bodies[0].statements.count, 1)
+        XCTAssertEqual(bodies[1].assignments.count, 1)
     }
 
     func testParseVariablesGetterBody() throws {

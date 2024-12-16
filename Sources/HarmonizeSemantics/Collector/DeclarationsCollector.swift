@@ -193,18 +193,6 @@ package final class DeclarationsCollector: SyntaxVisitor {
         return .skipChildren
     }
     
-    public override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        _ = startScopeWith(node) {
-            FunctionCall(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
-        }
-        
-        return .visitChildren
-    }
-    
-    public override func visitPost(_ node: FunctionCallExprSyntax) {
-        endScope(for: node)
-    }
-    
     private func startScopeWith<T: Declaration>(_ node: SyntaxProtocol, make: () -> [T]) -> [T] {
         let newDeclarations = make()
         

@@ -20,9 +20,15 @@
 import Foundation
 import SwiftSyntax
 import SwiftParser
+import SwiftOperators
 import HarmonizeUtils
 
-internal class SyntaxSourceCache<Syntax: SyntaxProtocol> {
+/*
+ * That's a very simple yet functional in memory caching mechanism based on SwiftLint's implementation
+ * for sourceKitten symbols. This is far from making parsing optimal but helps avoid increasing time between
+ * tests run. It compensates SwiftSyntax's parsing performance issue when you run all tests.
+ */
+internal class SyntaxSourceCache<Syntax> {
     private var elements: ConcurrentDictionary<UUID, Syntax> = ConcurrentDictionary()
     private let factory: (SwiftSourceCode) -> Syntax
     
@@ -53,6 +59,12 @@ internal class SyntaxSourceCache<Syntax: SyntaxProtocol> {
     }
 }
 
-internal let cachedSyntaxTree = SyntaxSourceCache {
+internal let syntaxTreeCache = SyntaxSourceCache {
     Parser.parse(source: $0.source)
+}
+
+internal let foldedSyntaxTreeCache = SyntaxSourceCache { source -> SourceFileSyntax? in
+    OperatorTable.standardOperators
+        .foldAll(source.sourceFileSyntax) { _ in /* no-op */ }
+        .as(SourceFileSyntax.self)
 }

@@ -21,6 +21,7 @@ let package = Package(
             name: "Harmonize",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
                 "Yams",
                 "HarmonizeSemantics",
@@ -36,6 +37,12 @@ let package = Package(
         ),
         .target(name: "HarmonizeUtils"),
         .testTarget(name: "HarmonizeTests", dependencies: ["Harmonize"]),
-        .testTarget(name: "SemanticsTests", dependencies: ["HarmonizeSemantics"])
+        .testTarget(
+            name: "SemanticsTests",
+            dependencies: [
+                "HarmonizeSemantics",
+                .product(name: "SwiftOperators", package: "swift-syntax"),
+            ]
+        )
     ]
 )
