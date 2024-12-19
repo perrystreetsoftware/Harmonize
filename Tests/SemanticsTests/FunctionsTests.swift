@@ -247,7 +247,14 @@ final class FunctionsTests: XCTestCase {
         let statements = functionBody.statements
         let functionCall = functionBody.functionCalls.first!
         
-        XCTAssertEqual(statements.map(\.description), ["let cal = \"cal\"", "return \"return\""])
+        XCTAssertEqual(
+            statements.map(\.description),
+            [
+                "let cal = \"cal\"",
+                "noLabelAtAll(cal)",
+                "return \"return\""
+            ]
+        )
         XCTAssertEqual(functionCall.call, "noLabelAtAll")
     }
 

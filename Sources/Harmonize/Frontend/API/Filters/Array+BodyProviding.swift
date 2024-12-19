@@ -24,57 +24,96 @@ import HarmonizeSemantics
 /// providing filtering functionality based on body.
 public extension Array where Element: Declaration & BodyProviding {
     /// Filters the array to include only elements with a body that satisfies the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes a `Body` and returns a Boolean value indicating whether the body meets the criteria.
+    /// - returns: An array of elements whose body matches the specified predicate.
     func withBody(_ predicate: (Body) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body)
         }
     }
-    
+
+    /// Filters the array to include only elements whose body does not satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes a `Body` and returns a Boolean value indicating whether the body meets the criteria.
+    /// - returns: An array of elements whose body does not match the specified predicate.
     func withoutBody(_ predicate: (Body) -> Bool) -> [Element] {
         withBody { !predicate($0) }
     }
-    
+
+    /// Filters the array to include only elements whose body contains assignments that satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `Assignment` objects and returns a Boolean value indicating whether the assignments meet the criteria.
+    /// - returns: An array of elements whose assignments match the specified predicate.
     func withAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body.assignments)
         }
     }
-    
+
+    /// Filters the array to include only elements whose body contains assignments that do not satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `Assignment` objects and returns a Boolean value indicating whether the assignments meet the criteria.
+    /// - returns: An array of elements whose assignments do not match the specified predicate.
     func withoutAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
         withAssignments { !predicate($0) }
     }
-    
+
+    /// Filters the array to include only elements whose body contains function calls that satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `FunctionCall` objects and returns a Boolean value indicating whether the function calls meet the criteria.
+    /// - returns: An array of elements whose function calls match the specified predicate.
     func withFunctionCalls(_ predicate: ([FunctionCall]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body.functionCalls)
         }
     }
-    
+
+    /// Filters the array to include only elements whose body contains function calls that do not satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `FunctionCall` objects and returns a Boolean value indicating whether the function calls meet the criteria.
+    /// - returns: An array of elements whose function calls do not match the specified predicate.
     func withoutFunctionCalls(_ predicate: ([FunctionCall]) -> Bool) -> [Element] {
         withFunctionCalls { !predicate($0) }
     }
-    
+
+    /// Filters the array to include only elements whose body contains if statements that satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `If` objects and returns a Boolean value indicating whether the if statements meet the criteria.
+    /// - returns: An array of elements whose if statements match the specified predicate.
     func withIfs(_ predicate: ([If]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body.ifs)
         }
     }
-    
+
+    /// Filters the array to include only elements whose body contains if statements that do not satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `If` objects and returns a Boolean value indicating whether the if statements meet the criteria.
+    /// - returns: An array of elements whose if statements do not match the specified predicate.
     func withoutIfs(_ predicate: ([If]) -> Bool) -> [Element] {
-        withIfs { !predicate($0 )}
+        withIfs { !predicate($0) }
     }
-    
+
+    /// Filters the array to include only elements whose body contains switches that satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `Switch` objects and returns a Boolean value indicating whether the switches meet the criteria.
+    /// - returns: An array of elements whose switches match the specified predicate.
     func withSwitches(_ predicate: ([Switch]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
             return predicate(body.switches)
         }
     }
-    
+
+    /// Filters the array to include only elements whose body contains switches that do not satisfy the given predicate.
+    ///
+    /// - parameter predicate: A closure that takes an array of `Switch` objects and returns a Boolean value indicating whether the switches meet the criteria.
+    /// - returns: An array of elements whose switches do not match the specified predicate.
     func withoutSwitches(_ predicate: ([Switch]) -> Bool) -> [Element] {
         withSwitches { !predicate($0) }
     }

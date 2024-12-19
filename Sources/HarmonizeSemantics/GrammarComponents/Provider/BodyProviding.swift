@@ -35,7 +35,7 @@ extension BodyProviding {
     /// - Parameter variableName: The name of the variable to check for.
     /// - Returns: `true` if the body contains an assignment to the variable, otherwise `false`.
     public func assigns(to variableName: String) -> Bool {
-        body?.assignments.contains { $0.target == variableName } ?? false
+        body?.assignments.contains { $0.leftOperand == variableName } ?? false
     }
     
     /// Retrieves all assignments to the specified variable name.
@@ -43,7 +43,7 @@ extension BodyProviding {
     /// - Parameter variableName: The name of the variable.
     /// - Returns: An array of assignments to the specified variable, or an empty array if none exist.
     public func assignments(to variableName: String) -> [Assignment] {
-        body?.assignments.filter { $0.target == variableName } ?? []
+        body?.assignments.filter { $0.leftOperand == variableName } ?? []
     }
     
     /// Checks if the body contains any assignments.
@@ -81,13 +81,10 @@ extension BodyProviding {
         body?.switches ?? []
     }
     
-    /// Checks if the body is empty (contains no statements, assignments, or function calls).
+    /// Checks if the body is empty.
     ///
     /// - Returns: `true` if the body is empty, otherwise `false`.
     public func isEmptyBody() -> Bool {
-        let isEmpty = body?.statements.isEmpty ?? true
-        let hasNoAssignments = body?.assignments.isEmpty ?? true
-        let hasNoFunctionCalls = body?.functionCalls.isEmpty ?? true
-        return isEmpty && hasNoAssignments && hasNoFunctionCalls
+        return self.body?.description.isEmpty ?? true
     }
 }

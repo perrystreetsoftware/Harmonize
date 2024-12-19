@@ -130,7 +130,7 @@ final class InitializersTests: XCTestCase {
         let statements = body.statements
         let assignment = body.assignments.first!
         
-        XCTAssertEqual(statements.map(\.description), ["var _ = \"bar\""])
-        XCTAssertEqual(assignment.target, "self.property")
+        XCTAssertEqual(statements.map(\.description), ["self.property = property", "var _ = \"bar\""])
+        XCTAssertEqual(assignment.leftOperand, "self.property")
     }
 }
