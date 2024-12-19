@@ -70,6 +70,8 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         var statements: [Statement] = []
         
         for child in node {
+            statements.append(Statement(node: child))
+
             if let infixOperator = child.item.as(InfixOperatorExprSyntax.self) {
                 assignments.append(Assignment(node: infixOperator))
                 continue
@@ -91,8 +93,6 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
                 functionCalls.append(FunctionCall(node: functionCallNode))
                 continue
             }
-            
-            statements.append(Statement(node: child))
         }
         
         self.assignments = assignments

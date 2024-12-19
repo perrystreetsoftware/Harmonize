@@ -75,7 +75,7 @@ final class BodyTests: XCTestCase {
     func testParsesAssignments() throws {
         let initializer = visitor.classes.first!.initializers.first!
         let assignments = initializer.body!.assignments
-        let targets = assignments.map(\.target)
+        let lhs = assignments.map(\.leftOperand)
         let rhs = assignments.map(\.rightOperand)
         
         let expectedTargets = [
@@ -89,7 +89,7 @@ final class BodyTests: XCTestCase {
         ]
         
         XCTAssertEqual(assignments.count, 7)
-        XCTAssertEqual(targets, expectedTargets)
+        XCTAssertEqual(lhs, expectedTargets)
         
         // RightOperand isn't yet equatable
         rhs.enumerated().forEach { index, rhs in
@@ -148,5 +148,12 @@ final class BodyTests: XCTestCase {
         
         XCTAssertEqual(switches.count, 1)
         XCTAssertEqual(switches.first!.cases.count, 3)
+    }
+    
+    func testParsesStatements() throws {
+        let initializer = visitor.classes.first!.initializers.first!
+        let statements = initializer.body!.statements
+        // Statements are more top-level and a raw representation of ifs, switches, assignments etc.
+        XCTAssertEqual(statements.count, 12)
     }
 }

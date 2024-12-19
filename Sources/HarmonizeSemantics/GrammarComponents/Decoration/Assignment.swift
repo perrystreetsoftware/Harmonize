@@ -26,7 +26,7 @@ public struct Assignment: DeclarationDecoration, SyntaxNodeProviding {
     public let node: InfixOperatorExprSyntax
     
     /// The target of the assignment expression (the left operand).
-    public var target: String {
+    public var leftOperand: String {
         node.leftOperand.trimmedDescription
     }
     
