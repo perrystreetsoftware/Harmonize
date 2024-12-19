@@ -21,7 +21,7 @@ final class LintRulesExamplesTests: XCTestCase {
             .withFunctionCalls { functionCalls in
                 let closures = functionCalls.compactMap(\.closure)
                 let hasAssignmentToSelf = closures.filter {
-                    $0.body?.assignments.contains { $0.target.contains("self") } == true
+                    $0.body?.assignments.contains { $0.leftOperand.contains("self") } == true
                 }
                 
                 return hasAssignmentToSelf.isNotEmpty
