@@ -4,7 +4,7 @@
 
 **Harmonize** is a modern linter for Swift that allows you to assert, validate, and harmonize your code’s structure and architecture via lint rules written as unit tests — using [XCTest](https://developer.apple.com/documentation/xctest/) or [Quick](https://github.com/Quick/Quick).
 
-This allows your team to keep your codebase clean, maintainable, and consistent as it grows.
+This allows your team to keep your codebase clean, maintainable, and consistent as it grows, without relying on manual code reviews.
 
 **Harmonize** is inspired by [SwiftLint](https://github.com/realm/SwiftLint) (a linter focused on Swift style and conventions) and [Konsist](https://github.com/LemonAppDev/konsist) (a linter for Kotlin focused on code structure & architecture).
 
