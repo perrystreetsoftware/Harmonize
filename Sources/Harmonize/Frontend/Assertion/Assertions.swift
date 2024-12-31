@@ -30,6 +30,7 @@ public extension Array where Element: SyntaxNodeProviding {
     ///
     /// - parameters:
     ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
+    ///   - strict: Flag to indicate if the assertion should be in strict mode. If true then it will fail for empty collections.
     ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
     ///   - file: The file path to use in the assertion. Defaults to the calling file.
     ///   - line: The line number to use in the assertion. Defaults to the calling line.
@@ -37,11 +38,17 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - warning: This method will try report all issues in the original source code location when available.
     func assertTrue(
         message: String? = nil,
+        strict: Bool = false,
         showErrorAtSource: Bool = true,
         file: StaticString = #filePath,
         line: UInt = #line,
         condition: (Element) -> Bool
     ) {
+        if strict && isEmpty {
+            XCTFail("Expected true but got empty collection instead.", file: file, line: line)
+            return
+        }
+        
         let issues = elements(matching: { !condition($0) }).toXCTIssues(message: message)
         guard !issues.isEmpty else { return }
         
@@ -59,6 +66,7 @@ public extension Array where Element: SyntaxNodeProviding {
     ///
     /// - parameters:
     ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
+    ///   - strict: Flag to indicate if the assertion should be in strict mode. If true then it will fail for empty collections.
     ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
     ///   - file: The file path to use in the assertion. Defaults to the calling file.
     ///   - line: The line number to use in the assertion. Defaults to the calling line.
@@ -66,11 +74,17 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - warning: This method will try report all issues in the original source code location when available.
     func assertFalse(
         message: String? = nil,
+        strict: Bool = false,
         showErrorAtSource: Bool = true,
         file: StaticString = #filePath,
         line: UInt = #line,
         condition: (Element) -> Bool
     ) {
+        if strict && isEmpty {
+            XCTFail("Expected false but got empty collection instead.", file: file, line: line)
+            return
+        }
+        
         let issues = elements(matching: { condition($0) }).toXCTIssues(message: message)
         guard !issues.isEmpty else { return }
         

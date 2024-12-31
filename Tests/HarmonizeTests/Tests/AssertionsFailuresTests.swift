@@ -32,9 +32,21 @@ final class AssertionsFailuresTests: XCTestCase {
         }
     }
     
+    func testAssertTrueFailsBecauseStrictModeIsEnabled() throws {
+        [Class]().assertTrue(strict: true) { _ in
+            true
+        }
+    }
+    
     func testAssertFalseFailsBecauseConditionIsTrue() throws {
         testCode.classes().assertFalse { _ in
             true
+        }
+    }
+    
+    func testAssertFalseFailsBecauseStrictModeIsEnabled() throws {
+        [Class]().assertFalse(strict: true) { _ in
+            false
         }
     }
     

@@ -28,8 +28,20 @@ final class AssertionsTests: XCTestCase {
         }
     }
     
+    func testAssertTrueWithStrictMode() throws {
+        testCode.classes().assertTrue(strict: true) { _ in
+            true
+        }
+    }
+    
     func testAssertFalse() throws {
         testCode.classes().assertFalse { _ in
+            false
+        }
+    }
+    
+    func testAssertFalseWithStrictMode() throws {
+        testCode.classes().assertFalse(strict: true) { _ in
             false
         }
     }
