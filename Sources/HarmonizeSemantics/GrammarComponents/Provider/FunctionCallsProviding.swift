@@ -41,26 +41,43 @@ public extension FunctionCallsProviding {
     /// Checks if any of the function calls matches a list of specified function names ignoring arguments and ().
     ///
     /// - Parameter functions: An array of function names to check.
+    /// - Parameter recursively: A Boolean indicating whether to check nested invocations. Default is `false`.
     /// - Returns: A Boolean value indicating whether any of the functions in the list have been invoked.
-    func invokes(_ functions: [String]) -> Bool {
-        return functionCalls.contains(where: {
-            functions.contains($0.call)
-        })
+    func invokes(_ functions: [String], recursively: Bool = false) -> Bool {
+        let calls = recursively ? functionCalls.flatten : functionCalls
+        return calls.contains(where: { functions.contains($0.call) })
     }
 
     /// Checks if a specific function name has been invoked.
     ///
     /// - Parameter function: The name of the function to check.
+    /// - Parameter recursively: A Boolean indicating whether to check nested invocations. Default is `false`.
     /// - Returns: A Boolean value indicating whether the specified function has been invoked.
-    func invokes(_ function: String) -> Bool {
-        return invokes([function])
+    func invokes(_ function: String, recursively: Bool = false) -> Bool {
+        return invokes([function], recursively: recursively)
     }
 
-    /// Checks if any function call satisfies a given predicate.
+    /// Checks if any function call satisfies a given predicate, optionally checking recursively.
     ///
-    /// - Parameter predicate: A closure that takes a `FunctionCall` object and returns a Boolean value.
+    /// - Parameter predicate: A closure that takes a ``FunctionCall`` object and returns a Boolean value.
+    /// - Parameter recursively: If set to `true` it will traverse all function calls including nested for the given predicate.
     /// - Returns: A Boolean value indicating whether any function call satisfies the given predicate.
-    func invokes(where predicate: (FunctionCall) -> Bool) -> Bool {
-        return functionCalls.contains(where: predicate)
+    func invokes(where predicate: (FunctionCall) -> Bool, recursively: Bool = false) -> Bool {
+        let calls = recursively ? functionCalls.flatten : functionCalls
+        return calls.contains(where: predicate)
+    }
+}
+
+fileprivate extension Array where Element == FunctionCall {
+    var flatten: [FunctionCall] {
+        var result: [FunctionCall] = []
+        var stack: [FunctionCall] = self
+
+        while let current = stack.popLast() {
+            result.append(current)
+            stack.append(contentsOf: current.functionCalls)
+        }
+
+        return result
     }
 }
