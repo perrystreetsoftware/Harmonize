@@ -62,6 +62,11 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     public var closure: Closure? {
         Closure(node: node.trailingClosure)
     }
+    
+    /// - Returns: if the given function call is a trailing closure.
+    public var isClosure: Bool {
+        closure != nil
+    }
 
     public var tokens: [Token] {
         return node.tokens(viewMode: .all)
@@ -135,10 +140,6 @@ public extension FunctionCall {
 
 extension FunctionCall: FunctionCallsProviding {
     public var functionCalls: [FunctionCall] {
-        node.children(viewMode: .all)
-            .compactMap {
-                $0.as(FunctionCallExprSyntax.self)
-            }
-            .map(FunctionCall.init(node:))
+        closure?.functionCalls ?? []
     }
 }
