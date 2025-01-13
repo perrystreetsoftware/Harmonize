@@ -18,7 +18,23 @@ final class HarmonizeTests: XCTestCase {
     
     private let testCode = Harmonize.testCode()
         .on("Fixtures/SampleApp")
-    
+
+    func testMultipleOnSelectsDifferentClasses() throws {
+        let productionCode = Harmonize.productionCode()
+        let filtersFiles = productionCode.on("Fixtures/Filters")
+        let sampleApp = productionCode.on("Fixtures/SampleApp")
+
+        XCTAssertNotEqual(filtersFiles.classes(), sampleApp.classes())
+    }
+
+    func testMultipleExcludingExcludesDifferentClasses() throws {
+        let productionCode = Harmonize.productionCode()
+        let filtersFiles = productionCode.excluding("Fixtures/Filters")
+        let sampleApp = productionCode.excluding("Fixtures/SampleApp")
+
+        XCTAssertNotEqual(filtersFiles.classes(), sampleApp.classes())
+    }
+
     func testCreatesScopesWithProductionAndTestCode() throws {
         let scope = productionAndTestCode
         let fileNames = scope.sources().map { $0.fileName }
