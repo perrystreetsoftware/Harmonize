@@ -39,7 +39,7 @@ internal class HarmonizeScopeBuilder {
         let folderKey = folder ?? "nil"
         let inclusionsKey = includingOnly.joined(separator: ",")
         let exclusionsKey = exclusions.joined(separator: ",")
-        return "\(folderKey)|\(inclusionsKey)|\(exclusionsKey)"
+        return "folder:\(folderKey)|including:\(inclusionsKey)|excluding:\(exclusionsKey)"
     }
 
     private var filesCache: [String: [SwiftSourceCode]] = [:]
@@ -75,8 +75,7 @@ internal class HarmonizeScopeBuilder {
 
 extension HarmonizeScopeBuilder: On {
     func on(_ folder: String) -> Excluding {
-        self.folder = folder
-        return self
+        return self.copy(folder: folder)
     }
 }
 
@@ -84,13 +83,11 @@ extension HarmonizeScopeBuilder: On {
 
 extension HarmonizeScopeBuilder: Excluding {
     func excluding(_ excludes: String...) -> HarmonizeScope {
-        self.exclusions = excludes + exclusions
-        return self
+        return self.copy(exclusions: excludes + self.exclusions)
     }
 
     func excluding(_ excludes: [String]) -> HarmonizeScope {
-        self.exclusions = excludes + exclusions
-        return self
+        return self.copy(exclusions: excludes + self.exclusions)
     }
 }
 
@@ -164,5 +161,21 @@ extension HarmonizeScopeBuilder: HarmonizeScope {
     
     func structs() -> [Struct] {
         structs(includeNested: false)
+    }
+}
+
+extension HarmonizeScopeBuilder {
+    public func copy(
+        file: StaticString? = nil,
+        folder: String? = nil,
+        includingOnly: [String]? = nil,
+        exclusions: [String]? = nil
+    ) -> HarmonizeScopeBuilder {
+        return HarmonizeScopeBuilder(
+            file: file ?? self.file,
+            folder: folder ?? self.folder,
+            includingOnly: includingOnly ?? self.includingOnly,
+            exclusions: exclusions ?? self.exclusions
+        )
     }
 }
