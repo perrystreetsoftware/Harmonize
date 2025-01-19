@@ -60,7 +60,7 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     /// Returns all closures present in this function call if it is an inlined function call expression, or its single closure if any.
     /// This will return empty if this function has no trailing closure at all.
     public var inlineClosures: [Closure] {
-        (internalInlineCalls.map(\.closure) + [closure]).compactMap(\.self)
+        (internalInlineCalls.map(\.closure) + [closure]).compactMap { $0 }
     }
     
     /// The name of the function or expression called inlined.
