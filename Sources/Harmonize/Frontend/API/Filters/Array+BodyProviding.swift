@@ -44,20 +44,20 @@ public extension Array where Element: Declaration & BodyProviding {
 
     /// Filters the array to include only elements whose body contains assignments that satisfy the given predicate.
     ///
-    /// - parameter predicate: A closure that takes an array of `Assignment` objects and returns a Boolean value indicating whether the assignments meet the criteria.
+    /// - parameter predicate: A closure that takes an array of ``InfixExpression`` objects and returns a Boolean value indicating whether the assignments meet the criteria.
     /// - returns: An array of elements whose assignments match the specified predicate.
-    func withAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
+    func withAssignments(_ predicate: ([InfixExpression]) -> Bool) -> [Element] {
         with(\.body) {
             guard let body = $0 else { return false }
-            return predicate(body.assignments)
+            return predicate(body.infixExpressions.filter(\.isAssignment))
         }
     }
 
     /// Filters the array to include only elements whose body contains assignments that do not satisfy the given predicate.
     ///
-    /// - parameter predicate: A closure that takes an array of `Assignment` objects and returns a Boolean value indicating whether the assignments meet the criteria.
+    /// - parameter predicate: A closure that takes an array of ``InfixExpression`` objects and returns a Boolean value indicating whether the assignments meet the criteria.
     /// - returns: An array of elements whose assignments do not match the specified predicate.
-    func withoutAssignments(_ predicate: ([Assignment]) -> Bool) -> [Element] {
+    func withoutAssignments(_ predicate: ([InfixExpression]) -> Bool) -> [Element] {
         withAssignments { !predicate($0) }
     }
 

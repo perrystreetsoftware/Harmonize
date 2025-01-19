@@ -180,7 +180,7 @@ final class VariablesTests: XCTestCase {
 
         XCTAssertEqual(bodies[0].functionCalls.count, 1)
         XCTAssertEqual(bodies[0].statements.count, 2)
-        XCTAssertEqual(bodies[1].assignments.count, 1)
+        XCTAssertEqual(bodies[1].infixExpressions.count, 1)
     }
 
     func testParseVariablesGetterBody() throws {

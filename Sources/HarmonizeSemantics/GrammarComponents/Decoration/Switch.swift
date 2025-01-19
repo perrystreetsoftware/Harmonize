@@ -53,6 +53,16 @@ public struct Switch: DeclarationDecoration, SyntaxNodeProviding {
             .map(Case.init(node:))
     }
     
+    /// A boolean flag that indicates if there are any cases with a self reference in its body.
+    public var hasAnySelfReference: Bool {
+        cases.contains { $0.body?.hasAnySelfReference ?? false }
+    }
+    
+    /// A boolean flag that indicates if there are any cases where its body contains a closure with self reference
+    public var hasAnyClosureWithSelfReference: Bool {
+        cases.contains { $0.body?.hasAnyClosureWithSelfReference ?? false }
+    }
+    
     internal init(node: SwitchExprSyntax) {
         self.node = node
     }
@@ -90,6 +100,14 @@ extension Switch {
             Attribute(node: node.attribute)
         }
         
+        public var items: [Item] {
+            if case .case(let label) = node.label {
+                return label.caseItems.compactMap(Item.init(node:))
+            }
+            
+            return []
+        }
+        
         /// Indicates whether the case is a `default` case.
         public var isDefault: Bool {
             return if case .default(_) = node.label {
@@ -121,10 +139,7 @@ extension Switch.Case {
     public enum Item: Equatable {
         /// A case with a literal expression, such as `case 1`.
         case literalExpression(String)
-                
-        /// A case with a named member, such as `case .one`.
-        case namedMember(String)
-        
+
         /// A case with a type check, such as `case is String`.
         case isType(String)
         
@@ -149,17 +164,15 @@ extension Switch.Case {
             let pattern = node.pattern
             
             if let expressionPattern = pattern.as(ExpressionPatternSyntax.self) {
-                    self = .literalExpression(expressionPattern.description)
-            } else if let identifierPattern = pattern.as(IdentifierPatternSyntax.self) {
-                self = .namedMember(identifierPattern.identifier.text)
+                self = .literalExpression(expressionPattern.expression.trimmedDescription)
             } else if let isTypePattern = pattern.as(IsTypePatternSyntax.self) {
                 self = .isType(isTypePattern.type.description)
             } else if let valueBindingPattern = pattern.as(ValueBindingPatternSyntax.self) {
                 let keyword = valueBindingPattern.bindingSpecifier.text
-                if let identifierPattern = valueBindingPattern.pattern.as(IdentifierPatternSyntax.self) {
+                if let expr = valueBindingPattern.pattern.as(ExpressionPatternSyntax.self) {
                     self = .valueBindingWithMember(
                         keyword: keyword,
-                        name: identifierPattern.identifier.text,
+                        name: expr.expression.trimmedDescription,
                         elements: []
                     )
                 } else if let tuplePattern = valueBindingPattern.pattern.as(TuplePatternSyntax.self) {

@@ -39,41 +39,66 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         node.toString()
     }
 
-    /// An array of `Assignment` objects representing all assignments in the body of the declaration.
-    public let assignments: [Assignment]
+    /// An array of ``InfixExpression`` representing all infix expression in this body.
+    /// An infix expression is commonly represented by a left operand, an operator and a right operand such as `a = b`.
+    public let infixExpressions: [InfixExpression]
     
-    /// An array of `FunctionCall` objects representing all the top-level function call present in the body.
+    /// An array of ``FunctionCall`` objects representing all the top-level function call present in the body.
     /// e.g `someFunc()` is included but `value = getValue()` is part of Assignment. We don't include nested calls for now.
     public let functionCalls: [FunctionCall]
     
-    /// An array of `If` objects representing all the if-conditions present in the body.
+    /// An array of ``If`` objects representing all the if-conditions present in the body.
     public let ifs: [If]
     
     /// An array of raw statement type representing the body, with each corresponding to a statement
     /// in the body. Each statement is trimmed of leading/trailing whitespace.
     public let statements: [Statement]
     
-    /// An array of `Switch` all the switch statements present in the body.
+    /// An array of ``Switch`` all the switch statements present in the body.
     public let switches: [Switch]
+    
+    /// An array of ``Guard`` representing all guard statements in this body.
+    public let guards: [Guard]
     
     public var description: String {
         node.trimmedDescription
+    }
+    
+    /// An array of ``Closure`` present in this array recursively parsed from its ``FunctionCall``, if any.
+    public var closures: [Closure] {
+        functionCalls.flatMap(\.inlineClosures)
+    }
+    
+    /// A boolean flag that indicates if self is used in any statement in this body.
+    
+    /// This doesn't necessarily means that this body is leaking self since
+    /// it can be a function's body with a self reference to call another function.
+    ///
+    /// `hasAnyClosureWithSelfReference` is a proper method to use for this purpose.
+    public var hasAnySelfReference: Bool {
+        node.tokens(viewMode: .all).contains(where: { $0.tokenKind == .keyword(.`self`) })
+    }
+    
+    /// A boolean flag that indicates if self is used in any closures within this body.
+    public var hasAnyClosureWithSelfReference: Bool {
+        functionCalls.contains { $0.hasClosureWithSelfReference }
     }
 
     internal init(node: CodeBlockItemListSyntax) {
         self.node = node
         
-        var assignments: [Assignment] = []
+        var infixExpressions: [InfixExpression] = []
         var functionCalls: [FunctionCall] = []
         var ifs: [If] = []
         var switches: [Switch] = []
+        var guards: [Guard] = []
         var statements: [Statement] = []
         
         for child in node {
             statements.append(Statement(node: child))
 
             if let infixOperator = child.item.as(InfixOperatorExprSyntax.self) {
-                assignments.append(Assignment(node: infixOperator))
+                infixExpressions.append(InfixExpression(node: infixOperator))
                 continue
             }
             
@@ -89,16 +114,22 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
                 }
             }
             
+            if let guardNode = child.item.as(GuardStmtSyntax.self) {
+                guards.append(Guard(node: guardNode))
+                continue
+            }
+            
             if let functionCallNode = child.item.as(FunctionCallExprSyntax.self) {
                 functionCalls.append(FunctionCall(node: functionCallNode))
                 continue
             }
         }
         
-        self.assignments = assignments
+        self.infixExpressions = infixExpressions
         self.functionCalls = functionCalls
         self.ifs = ifs
         self.switches = switches
+        self.guards = guards
         self.statements = statements
     }
 

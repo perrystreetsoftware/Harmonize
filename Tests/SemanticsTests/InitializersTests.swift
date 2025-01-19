@@ -128,9 +128,9 @@ final class InitializersTests: XCTestCase {
     func testParseFunctionBody() throws {
         let body = visitor.structs.flatMap(\.initializers).first!.body!
         let statements = body.statements
-        let assignment = body.assignments.first!
+        let infixExpression = body.infixExpressions.first!
         
         XCTAssertEqual(statements.map(\.description), ["self.property = property", "var _ = \"bar\""])
-        XCTAssertEqual(assignment.leftOperand, "self.property")
+        XCTAssertEqual(infixExpression.leftOperand, "self.property")
     }
 }

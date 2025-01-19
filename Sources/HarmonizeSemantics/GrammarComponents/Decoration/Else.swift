@@ -1,5 +1,5 @@
 //
-//  If.swift
+//  Else.swift
 //  Harmonize
 //
 //  Copyright 2024 Perry Street Software Inc.
@@ -20,39 +20,27 @@
 import Foundation
 import SwiftSyntax
 
-public struct If: DeclarationDecoration, SyntaxNodeProviding {
-    public let node: IfExprSyntax
+public struct Else: DeclarationDecoration, SyntaxNodeProviding {
+    public let node: CodeBlockSyntax
 
     public var description: String {
         node.trimmedDescription
     }
-        
-    public var elseIf: If? {
-        Self(node: node.elseBody?.as(IfExprSyntax.self))
-    }
     
-    public var `else`: Else? {
-        Else(node: node.elseBody?.as(CodeBlockSyntax.self))
-    }
-    
-    internal init(node: IfExprSyntax) {
+    internal init(node: CodeBlockSyntax) {
         self.node = node
     }
     
-    internal init?(node: IfExprSyntax?) {
+    internal init?(node: CodeBlockSyntax?) {
         guard let node else { return nil }
         self.node = node
     }
 }
 
-// MARK: Providers comformance
+// MARK: BodyProviding comformance
 
-extension If: BodyProviding, ConditionsProviding {
+extension Else: BodyProviding {
     public var body: Body? {
-        Body(node: node.body.statements)
-    }
-    
-    public var conditions: [Condition] {
-        node.conditions.map(Condition.init(node:))
+        Body(node: node.statements)
     }
 }

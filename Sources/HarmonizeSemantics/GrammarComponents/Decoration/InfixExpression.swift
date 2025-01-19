@@ -1,5 +1,5 @@
 //
-//  Assignment.swift
+//  InfixExpression.swift
 //  Harmonize
 //
 //  Copyright 2024 Perry Street Software Inc.
@@ -20,14 +20,18 @@
 import Foundation
 import SwiftSyntax
 
-/// Represents an assignment expression in Swift syntax, specifically an infix operator assignment (e.g., `a = b`).
-public struct Assignment: DeclarationDecoration, SyntaxNodeProviding {
+/// Represents an infix expression in Swift syntax (e.g., `a = b`).
+public struct InfixExpression: DeclarationDecoration, SyntaxNodeProviding {
     /// The underlying syntax node for the assignment expression.
     public let node: InfixOperatorExprSyntax
     
     /// The target of the assignment expression (the left operand).
     public var leftOperand: String {
         node.leftOperand.trimmedDescription
+    }
+    
+    public var `operator`: String {
+        node.operator.trimmedDescription
     }
     
     /// the assignment value after `=` (the right operand)
@@ -60,6 +64,10 @@ public struct Assignment: DeclarationDecoration, SyntaxNodeProviding {
         return .unsupported(node.rightOperand.trimmedDescription)
     }
     
+    public var isAssignment: Bool {
+        `operator` == "="
+    }
+    
     public var description: String {
         node.trimmedDescription
     }
@@ -69,9 +77,9 @@ public struct Assignment: DeclarationDecoration, SyntaxNodeProviding {
     }
 }
 
-// MARK: Operands
+// MARK: InfixExpression + Operands
 
-extension Assignment {
+extension InfixExpression {
     public enum RightOperand {
         case reference(name: String, arguments: [String])
         case literalStringValue(String)
