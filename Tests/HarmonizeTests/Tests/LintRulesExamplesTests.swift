@@ -21,7 +21,7 @@ final class LintRulesExamplesTests: XCTestCase {
             .withFunctionCalls { functionCalls in
                 let closures = functionCalls.compactMap(\.closure)
                 let hasAssignmentToSelf = closures.filter {
-                    $0.body?.assignments.contains { $0.leftOperand.contains("self") } == true
+                    $0.assigns(to: "self")
                 }
                 
                 return hasAssignmentToSelf.isNotEmpty
@@ -33,10 +33,19 @@ final class LintRulesExamplesTests: XCTestCase {
     func testNoIfOnInitializers() throws {
         Harmonize.on { Self.ViewModel }
             .classes()
-            .withInitializers { $0.hasIfStatements() }
+            .withInitializers { $0.hasIfs() }
             .assertEmpty(message: "We don't like if-else conditions in initializers. Consider cleaning up your code.")
     }
     
+    func testFunctionCallClosures() throws {
+        Harmonize.on { Self.FunctionCalls }
+            .functions()
+            .filter {
+                $0.hasAnyClosureWithSelfReference && $0.closures().allSatisfy { $0.isCapturingWeak(valueOf: "self") }
+            }
+            .assertNotEmpty()
+    }
+        
     private static let ViewModel: String = """
         class UserViewModel: ObservableObject {
             private var cancellables = Set<AnyCancellable>()
@@ -67,5 +76,25 @@ final class LintRulesExamplesTests: XCTestCase {
             }
         }
 
+    """
+    
+    private static let FunctionCalls: String = """
+    private func listenToSomeStream() {
+            setupStream()
+                .sink { data in
+                    guard let self else { return }
+                    let result = data.result
+                    let additionalResult = data.additionalResult
+                    switch result {
+                    case .success(let viewData):
+                        self.handleSuccess(data: viewData, additionalData: additionalResult)
+                    case .error(let error):
+                        self.handleError(error)
+                    case .loading:
+                        self.state = .loading(data: self.placeholders)
+                    }
+                }
+                .store(in: &cancellables)
+    }
     """
 }

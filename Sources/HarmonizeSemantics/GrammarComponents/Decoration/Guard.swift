@@ -1,5 +1,5 @@
 //
-//  If.swift
+//  Guard.swift
 //  Harmonize
 //
 //  Copyright 2024 Perry Street Software Inc.
@@ -20,34 +20,28 @@
 import Foundation
 import SwiftSyntax
 
-public struct If: DeclarationDecoration, SyntaxNodeProviding {
-    public let node: IfExprSyntax
+/// A struct that represents a `guard` statement in Swift code.
+public struct Guard: DeclarationDecoration, SyntaxNodeProviding {
+    /// The syntax node representing the guard statement in the abstract syntax tree (AST).
+    public let node: GuardStmtSyntax
 
     public var description: String {
         node.trimmedDescription
     }
         
-    public var elseIf: If? {
-        Self(node: node.elseBody?.as(IfExprSyntax.self))
-    }
-    
-    public var `else`: Else? {
-        Else(node: node.elseBody?.as(CodeBlockSyntax.self))
-    }
-    
-    internal init(node: IfExprSyntax) {
+    internal init(node: GuardStmtSyntax) {
         self.node = node
     }
     
-    internal init?(node: IfExprSyntax?) {
+    internal init?(node: GuardStmtSyntax?) {
         guard let node else { return nil }
         self.node = node
     }
 }
 
-// MARK: Providers comformance
+// MARK: BodyProviding comformance
 
-extension If: BodyProviding, ConditionsProviding {
+extension Guard: BodyProviding, ConditionsProviding {
     public var body: Body? {
         Body(node: node.body.statements)
     }

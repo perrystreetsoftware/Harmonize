@@ -26,6 +26,10 @@ public struct InitializerClause: DeclarationDecoration, SyntaxNodeProviding {
     /// The syntax node representing the initializer clause in the abstract syntax tree (AST).
     public let node: InitializerClauseSyntax
     
+    public var description: String {
+        node.trimmedDescription
+    }
+    
     /// The value of the initializer clause, representing the content assigned after the `=` sign.
     ///
     /// For example, in the declaration `var prop = "xyz"`, the `value` is `"xyz"`.
@@ -34,8 +38,11 @@ public struct InitializerClause: DeclarationDecoration, SyntaxNodeProviding {
         return literalValue ?? node.value.trimmedDescription
     }
     
-    public var description: String {
-        node.trimmedDescription
+    /// A bool that indicates if this initializer's value is a self reference, such as in `if let self = self`
+    ///
+    /// - Returns: true if this initializer is a self reference.
+    public var isSelfReference: Bool {
+        node.value.as(DeclReferenceExprSyntax.self)?.baseName.tokenKind == .keyword(.`self`)
     }
     
     internal init(node: InitializerClauseSyntax) {

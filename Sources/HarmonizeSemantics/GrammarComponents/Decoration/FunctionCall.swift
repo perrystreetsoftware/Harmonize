@@ -29,9 +29,61 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     /// This property extracts and returns the called expression (e.g., the function name or method) in its trimmed form.
     /// For example, in the function call `print("Hello")`, the `call` is `"print"`.
     public var call: String {
-        node.calledExpression.trimmedDescription
+        if let memberAccess = node.calledExpression.as(MemberAccessExprSyntax.self) {
+            return memberAccess.declName.baseName.text
+        } else if let ref = node.calledExpression.as(DeclReferenceExprSyntax.self) {
+            return ref.baseName.text
+        }
+        
+        return node.calledExpression.trimmedDescription
     }
     
+    /// Returns all nested inline calls present in this function call, if any.
+    ///
+    /// Given the following code
+    /// ```swift
+    /// func function() {
+    ///     Call()
+    ///         .reference
+    ///         .call()
+    ///         .reference2
+    ///         .call()
+    /// }
+    /// ```
+    ///
+    /// This property would return `[Call(), "call", "call"]`.
+    public var inlineCalls: [FunctionCall] {
+        let calls = internalInlineCalls
+        return calls.isEmpty ? [] : calls + [self]
+    }
+    
+    /// Returns all closures present in this function call if it is an inlined function call expression, or its single closure if any.
+    /// This will return empty if this function has no trailing closure at all.
+    public var inlineClosures: [Closure] {
+        (internalInlineCalls.map(\.closure) + [closure]).compactMap { $0 }
+    }
+    
+    /// The name of the function or expression called inlined.
+    ///
+    /// This property returns the complete call expression trimming arguments, closures body and newlines.
+    /// ```swift
+    /// func function() {
+    ///     firstCall()
+    ///     reference.secondCall()
+    ///     anotherFunction().filter { $0 > $ 1 }
+    ///         .map(\.name)
+    ///         .doSomething { }
+    /// }
+    /// ```
+    ///
+    /// The resulting `inlineCallExpression` for all three function calls above would:
+    ///  - 1. firstCall
+    ///  - 2. reference.secondCall
+    ///  - 3. anotherFunction.filter.map.doSomething
+    public var inlineCallExpression: String {
+        tokens.map(\.value).joined(separator: ".")
+    }
+        
     /// The arguments passed to the function call.
     ///
     /// This property returns an array of ``Argument``, each representing an argument passed to the function.
@@ -63,11 +115,29 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
         Closure(node: node.trailingClosure)
     }
     
+    /// The additional trailing closure of the function call, if any.
+    public var additionalClosures: [Closure] {
+        node.additionalTrailingClosures.compactMap { Closure(node: $0.closure) }
+    }
+    
     /// - Returns: if the given function call is a trailing closure.
     public var isClosure: Bool {
         closure != nil
     }
-
+    
+    /// - Returns: true if the given function call refers to self.
+    public var isSelfReference: Bool {
+        node.calledExpression.as(MemberAccessExprSyntax.self)?.base?.trimmedDescription == "self"
+    }
+    
+    /// - Returns: true if the given function call has a closure with self reference.
+    public var hasClosureWithSelfReference: Bool {
+        let hasSelfRefInClosure = closure?.hasSelfReference ?? false
+        let hasSelfRefInAdditionalClosure = additionalClosures.contains(where: \.hasSelfReference)
+        let hasSelfRefInInlineCalls = internalInlineCalls.contains(where: \.hasClosureWithSelfReference)
+        return hasSelfRefInClosure || hasSelfRefInAdditionalClosure || hasSelfRefInInlineCalls
+    }
+    
     public var tokens: [Token] {
         return node.tokens(viewMode: .all)
             .compactMap { token in
@@ -98,9 +168,13 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     internal init(node: FunctionCallExprSyntax) {
         self.node = node
     }
+    
+    private var internalInlineCalls: [FunctionCall] {
+        FunctionCall.parseInline(node: node)
+    }
 }
 
-// MARK: - Argument
+// MARK: - Call, Argument, Token
 
 public extension FunctionCall {
     /// A struct representing a single argument in a function call.
@@ -139,7 +213,26 @@ public extension FunctionCall {
 // MARK: Capabilities Comformance
 
 extension FunctionCall: FunctionCallsProviding {
+    /// An array of function calls present in this function call if it has a trailing closure.
     public var functionCalls: [FunctionCall] {
         closure?.functionCalls ?? []
+    }
+    
+    private static func parseInline(node: FunctionCallExprSyntax) -> [FunctionCall] {
+        var results: [FunctionCall] = []
+        
+        func traverse(node: ExprSyntax?) {
+            guard let node = node else { return }
+                
+            if let funcCall = node.as(FunctionCallExprSyntax.self) {
+                results.append(FunctionCall(node: funcCall))
+                traverse(node: funcCall.calledExpression)
+            } else if let memberAccessExpr = node.as(MemberAccessExprSyntax.self) {
+                traverse(node: memberAccessExpr.base)
+            }
+        }
+        
+        traverse(node: node.calledExpression)
+        return results.reversed()
     }
 }

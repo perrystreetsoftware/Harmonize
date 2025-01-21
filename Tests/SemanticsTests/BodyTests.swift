@@ -56,6 +56,15 @@ final class BodyTests: XCTestCase {
         func closureElsewhere(f: (Int) -> Void) {
             f(42)
         }
+    
+        func complexFunc() {
+            publisher.filter { $0 }
+                .flatMap { procedure() }
+                .flatMap { $0 > 1 ? $0.mapped() : self.call() }
+                .sink { }
+        }
+    
+        func call() {}
     }
     """.parsed()
     
@@ -74,7 +83,7 @@ final class BodyTests: XCTestCase {
     
     func testParsesAssignments() throws {
         let initializer = visitor.classes.first!.initializers.first!
-        let assignments = initializer.body!.assignments
+        let assignments = initializer.body!.infixExpressions
         let lhs = assignments.map(\.leftOperand)
         let rhs = assignments.map(\.rightOperand)
         
@@ -110,7 +119,7 @@ final class BodyTests: XCTestCase {
             }
             
             if case let .ifCondition(ifCondition) = rhs {
-                XCTAssertEqual(ifCondition.conditions, ["closure() < 9"])
+                XCTAssertEqual(ifCondition.conditions.map { $0.asString }, ["closure() < 9"])
             }
             
             if case let .reference(name, _) = rhs {
@@ -129,7 +138,7 @@ final class BodyTests: XCTestCase {
         
         XCTAssertEqual(functionCalls.count, 2)
         XCTAssertEqual(functionCalls[0].call, "closureElsewhere")
-        XCTAssertTrue(functionCalls[0].closure!.isCapturingWeak(value: "self"))
+        XCTAssertTrue(functionCalls[0].closure!.isCapturingWeak(valueOf: "self"))
         XCTAssertEqual(functionCalls[1].call, "listenToSomeHeavyData")
     }
     
@@ -138,8 +147,8 @@ final class BodyTests: XCTestCase {
         let ifs = initializer.body!.ifs
         
         XCTAssertEqual(ifs.count, 2)
-        XCTAssertEqual(ifs[0].conditions, ["value > 2"])
-        XCTAssertEqual(ifs[1].conditions, ["closure() > 9"])
+        XCTAssertEqual(ifs[0].conditions.map(\.asString), ["value > 2"])
+        XCTAssertEqual(ifs[1].conditions.map(\.asString), ["closure() > 9"])
     }
     
     func testParsesSwitches() throws {
@@ -155,5 +164,11 @@ final class BodyTests: XCTestCase {
         let statements = initializer.body!.statements
         // Statements are more top-level and a raw representation of ifs, switches, assignments etc.
         XCTAssertEqual(statements.count, 12)
+    }
+    
+    func testParsesIfBodyHasSelfReference() throws {
+        let function = visitor.classes.first!.functions[1]
+        XCTAssertTrue(function.body?.hasAnySelfReference == true)
+        XCTAssertTrue(function.body?.hasAnyClosureWithSelfReference == true)
     }
 }

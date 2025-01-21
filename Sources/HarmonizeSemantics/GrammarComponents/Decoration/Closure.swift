@@ -53,15 +53,19 @@ public struct Closure: DeclarationDecoration, SyntaxNodeProviding {
         node.trimmedDescription
     }
     
-    public func isCapturing(value: String) -> Bool {
+    public var hasSelfReference: Bool {
+        return body?.hasAnySelfReference ?? false
+    }
+    
+    public func isCapturing(valueOf value: String) -> Bool {
         return captures.contains(where: { $0.value == value })
     }
     
-    public func isCapturingWeak(value: String) -> Bool {
+    public func isCapturingWeak(valueOf value: String) -> Bool {
         return captures.contains(where: { $0.isWeak() && $0.value == value })
     }
     
-    public func isCapturingUnowned(value: String) -> Bool {
+    public func isCapturingUnowned(valueOf value: String) -> Bool {
         return captures.contains(where: { $0.isUnowned() && $0.value == value })
     }
     
@@ -101,6 +105,20 @@ extension Closure {
                 case .unowned(detail: let detail): "unowned(\(detail))"
                 }
             }
+            
+            var isWeak: Bool {
+                switch self {
+                case .weak: return true
+                case .unowned: return false
+                }
+            }
+            
+            var isUnowned: Bool {
+                switch self {
+                case .weak: return false
+                case .unowned: return true
+                }
+            }
         }
         
         /// The underlying syntax node for the capture.
@@ -113,9 +131,9 @@ extension Closure {
         
         /// The captured closure value specifier if any.
         public var specifier: Specifier? {
-            switch node.specifier?.specifier.text {
-            case "weak": .weak
-            case "unowned": .unowned(detail: node.specifier?.detail?.text ?? "")
+            switch node.specifier?.specifier.tokenKind {
+            case .keyword(.weak): .weak
+            case .keyword(.unowned): .unowned(detail: node.specifier?.detail?.text ?? "")
             default: nil
             }
         }
@@ -130,11 +148,11 @@ extension Closure {
         }
         
         public func isWeak() -> Bool {
-            return specifier?.description == "weak"
+            return specifier?.isWeak == true
         }
         
         public func isUnowned() -> Bool {
-            return specifier?.description.contains("unowned") == true
+            return specifier?.isUnowned == true
         }
         
         public func isSafeUnowned() -> Bool {

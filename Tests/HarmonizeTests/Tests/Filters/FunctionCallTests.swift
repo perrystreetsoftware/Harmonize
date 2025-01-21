@@ -22,15 +22,15 @@ final class FunctionCallTests: XCTestCase {
             }
     }
     
-    func testFunctionCallInvokesRecursively() {
+    func testFunctionCallInvokesIncludingClosures() {
         // e.g every `describe` must call `TestFactory().withValue(1)` on its `beforeEach`
         // so `invokes` must be able to do a nested check here.
         sampleCode.classes()
             .functions()
             .withName("spec")
             .assertTrue {
-                $0.invokes("TestFactory().withValue", recursively: true) &&
-                $0.invokes("something.onTap", recursively: true)
+                $0.invokes("TestFactory().withValue", includeClosures: true) &&
+                $0.invokes("something.onTap", includeClosures: true)
             }
     }
 }
