@@ -127,7 +127,7 @@ public extension Array where Element: SwiftSourceCode {
 
     private func toXCTIssues(message: String? = nil) -> [(String, XCTIssue)] {
         compactMap {
-            let name = ($0 as? NamedDeclaration)?.name ?? String(describing: $0)
+            let name = $0.fileName ?? String(describing: $0)
             guard let issue = $0.issue(with: message ?? "\(name) did not match a test requirement.") else { return nil }
 
             return (name, issue)
