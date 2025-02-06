@@ -249,4 +249,36 @@ final class FiltersTests: XCTestCase {
             .withBodyContent(containing: "wrong_regex")
             .assertEmpty()
     }
+
+    func testSourceCodeFilters() throws {
+        Harmonize.productionCode().sources().withName("AccessorBlocksProviding.swift")
+            .assertNotEmpty()
+
+        Harmonize.productionCode().sources().withName("InvalidNameFile.swift")
+            .assertEmpty()
+
+        Harmonize.productionCode().sources()
+            .withSuffix("+Enum.swift")
+            .assertCount(count: 1)
+
+        Harmonize.productionCode().sources()
+            .withSuffix("+Enum.swift")
+            .withImport("HarmonizeSemantics")
+            .assertCount(count: 1)
+
+        Harmonize.productionCode().sources()
+            .withSuffix("+Enum.swift")
+            .withImport("Invalid")
+            .assertCount(count: 0)
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .sources()
+            .withoutSuffix("Fixtures.swift")
+            .assertEmpty()
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .sources()
+            .withoutName(["InheritanceFixtures.swift"])
+            .assertEmpty()
+    }
 }
