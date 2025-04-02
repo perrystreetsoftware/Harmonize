@@ -122,4 +122,14 @@ public extension Array where Element: Declaration & NamedDeclaration {
             parts.contains(where: $0.contains)
         }
     }
+    
+    /// Filters the array to exclude elements whose names start with any of the specified prefixes.
+    ///
+    /// - parameter prefixes: One or more prefixes to exclude.
+    /// - returns: A filtered array of elements whose names do not start with any of the provided prefixes.
+    func withoutNameStartingWith(_ prefixes: String...) -> [Element] {
+        withoutName {
+            prefixes.contains(where: $0.hasPrefix)
+        }
+    }
 }
