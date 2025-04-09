@@ -21,7 +21,11 @@ final class FiltersTests: XCTestCase {
         scope.classes(includeNested: true)
             .withSuffix("ViewModel")
             .assertCount(count: 3)
-        
+
+        scope.classes(includeNested: true)
+            .withNameEndingWith("ViewModel")
+            .assertCount(count: 3)
+
         scope.classes(includeNested: true)
             .withoutSuffix("ViewModel")
             .assertEmpty()
@@ -29,7 +33,11 @@ final class FiltersTests: XCTestCase {
         scope.classes(includeNested: true)
             .withPrefix("Base")
             .assertCount(count: 1)
-        
+
+        scope.classes(includeNested: true)
+            .withNameStartingWith("Base")
+            .assertCount(count: 1)
+
         scope.classes(includeNested: true)
             .withoutPrefix("Base")
             .assertCount(count: 2)
@@ -259,6 +267,10 @@ final class FiltersTests: XCTestCase {
 
         Harmonize.productionCode().sources()
             .withSuffix("+Enum.swift")
+            .assertCount(count: 1)
+
+        Harmonize.productionCode().sources()
+            .withNameEndingWith("+Enum.swift")
             .assertCount(count: 1)
 
         Harmonize.productionCode().sources()

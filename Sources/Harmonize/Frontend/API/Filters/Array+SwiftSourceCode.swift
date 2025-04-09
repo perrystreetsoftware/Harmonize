@@ -94,6 +94,17 @@ public extension Array where Element: SwiftSourceCode {
         }
     }
 
+    /// Filters the array to include only elements whose names end with any of the specified suffixes.
+    /// Identical to method above, just matches Konsist naming
+    ///
+    /// - parameter suffixes: One or more suffixes to match.
+    /// - returns: A filtered array of elements whose names end with one of the provided suffixes.
+    func withNameEndingWith(_ suffixes: String...) -> [Element] {
+        withName {
+            suffixes.contains(where: $0.hasSuffix)
+        }
+    }
+
     /// Filters the array to include only elements whose names do not end with any of the specified suffixes.
     ///
     /// - parameter suffixes: One or more suffixes to exclude.
