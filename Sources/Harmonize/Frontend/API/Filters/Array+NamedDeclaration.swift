@@ -72,7 +72,18 @@ public extension Array where Element: Declaration & NamedDeclaration {
             suffixes.contains(where: $0.hasSuffix)
         }
     }
-    
+
+    /// Filters the array to include only elements whose names end with any of the specified suffixes.
+    /// Identical to method above, just matches Konsist naming
+    /// 
+    /// - parameter suffixes: One or more suffixes to match.
+    /// - returns: A filtered array of elements whose names end with one of the provided suffixes.
+    func withNameEndingWith(_ suffixes: String...) -> [Element] {
+        withName {
+            suffixes.contains(where: $0.hasSuffix)
+        }
+    }
+
     /// Filters the array to include only elements whose names do not end with any of the specified suffixes.
     ///
     /// - parameter suffixes: One or more suffixes to exclude.
@@ -92,7 +103,18 @@ public extension Array where Element: Declaration & NamedDeclaration {
             prefixes.contains(where: $0.hasPrefix)
         }
     }
-    
+
+    /// Filters the array to include only elements whose names start with any of the specified prefixes.
+    /// Identical to method above, just matches the Konsist naming
+    ///
+    /// - parameter prefixes: One or more prefixes to match.
+    /// - returns: A filtered array of elements whose names start with one of the provided prefixes.
+    func withNameStartingWith(_ prefixes: String...) -> [Element] {
+        withName {
+            prefixes.contains(where: $0.hasPrefix)
+        }
+    }
+
     /// Filters the array to include only elements whose names do not start with any of the specified prefixes.
     ///
     /// - parameter prefixes: One or more prefixes to exclude.
