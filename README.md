@@ -15,17 +15,18 @@ With Harmonize, you can write a lint rule similarly as you would write a unit te
 ### Example using Quick:
 
 ```Swift
-import Quick
 import Harmonize
+import Quick
 
-class ViewModelsInheritFromBaseViewModel: QuickSpec {
-    override class func spec() {
-        describe("Given a ViewModel") {
-            let viewModels = Harmonize.classesProduction.withNameEndingWith("ViewModel")
-            
-            it("inherits from BaseViewModel") {
-                viewModels.assertTrue(message: "All ViewModels must inherit from the BaseViewModel") {
-                    $0.inherits(from: BaseViewModel.self)
+final class ViewModelsInheritBaseViewModelSpec: QuickSpec {
+    override func spec() {
+        describe("ViewModels") {
+            let viewModels = Harmonize.productionCode().classes()
+                .withNameEndingWith("ViewModel")
+
+            it("should inherit from BaseViewModel") {
+                viewModels.assertTrue(message: "All ViewModels must inherit from BaseViewModel") {
+                    $0.inherits(from: "BaseViewModel")
                 }
             }
         }
@@ -36,27 +37,27 @@ class ViewModelsInheritFromBaseViewModel: QuickSpec {
 ### Example using XCTest:
 
 ```Swift
-import XCTest
 import Harmonize
+import XCTest
 
-final class ViewModelsInheritFromBaseViewModel: XCTestCase {
-    func testViewModel() throws {
-        let viewModels = Harmonize.classesProduction.withNameEndingWith("ViewModel")
+final class ViewModelsInheritBaseViewModelSpec: XCTestCase {
+    func testViewModels() throws {
+        let viewModels = Harmonize.productionCode().classes()
+            .withNameEndingWith("ViewModel")
         
-        viewModels.assertTrue(message: "All ViewModels must inherit from the BaseViewModel") {
-            $0.inherits(from: BaseViewModel.self)
+        viewModels.assertTrue(message: "All ViewModels must inherit from BaseViewModel") {
+            $0.inherits(from: "BaseViewModel")
         }
     }
 }
 ```
 
-This lint rule enforces all ViewModels to inherit from the `BaseViewModel`. Since it runs as a unit test, it will fail once it detects a violation. You can add exceptions or a baseline to this rule using the `withoutName` function:
+This lint rule enforces all ViewModels to inherit from `BaseViewModel`. Since it runs as a unit test, it will fail once it detects a violation. You can add exceptions or a baseline to this rule using the `withoutName` function:
 
 ```Swift
-// ...
-let viewModels = Harmonize.classesProduction.withNameEndingWith("ViewModels")
+let viewModels = Harmonize.productionCode().classes()
+    .withNameEndingWith("ViewModel")
     .withoutName(["LegacyViewModel"])
-// ...
 ```
 
 You can create similar rules for any architectural or structural pattern that you want to enforce.
@@ -84,7 +85,10 @@ You can optionally create a dedicated Swift package for your Harmonize lint rule
 
 ## Configuration
 
-Add a `.harmonize.yaml` file in your project’s root directory to specify which files or folders you want to exclude from your lint rules, using the `excludes` key:
+Add an empty `.harmonize.yaml` file to the root of your project.
+This file is **required** for Harmonize to correctly detect the project root and apply your lint rules.
+
+You can also optionally specify which files or folders you want to exclude from all lint rules, using the `excludes` key:
 
 ```yaml
 excludes:
