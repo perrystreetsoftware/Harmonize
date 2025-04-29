@@ -119,6 +119,9 @@ jobs:
 - [Architectural Linting for Swift made Easy](https://medium.com/perry-street-software-engineering/architectural-linting-for-swift-made-easy-75d7f9f569cd)
 - [Goodbye Code Reviews, Hello Harmonize: Enforce Your Architecture in Swift](https://itnext.io/goodbye-code-reviews-hello-harmonize-0a49e2872b5a)
 
+## Example project
+
+You can see an example project that [uses Harmonize here](https://github.com/perrystreetsoftware/DemoAppIOS).
 
 ## Contributing
 
