@@ -6,7 +6,7 @@
 
 This allows your team to keep your codebase clean, maintainable, and consistent as it grows, without relying on manual code reviews.
 
-Harmonize aims to solve the limitations of regex-based linters such as [SwiftLint](https://github.com/realm/SwiftLint), which focus primarily on Swift style and simple conventions. Inspired by [Konsist](https://github.com/LemonAppDev/konsist), Harmonize provides a richer, semantic way to enforce your project's architecture and structural guidelines.
+Harmonize aims to solve the limitations of regex-based linters such as [SwiftLint](https://github.com/realm/SwiftLint), which focus primarily on Swift style and simple conventions. Inspired by [Konsist](https://github.com/LemonAppDev/konsist) for [Kotlin](https://www.droidcon.com/2024/03/12/stop-debating-in-code-reviews-start-enforcing-with-lint-rules/) and [ArchUnit]([https://www.baeldung.com/java-archunit-intro](https://www.archunit.org/)) for [Java](https://www.baeldung.com/java-archunit-intro), Harmonize provides a richer, semantic way to enforce your project's architecture and structural guidelines.
 
 ## Usage
 
