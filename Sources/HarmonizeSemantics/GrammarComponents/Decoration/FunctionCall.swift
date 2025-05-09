@@ -172,6 +172,29 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     private var internalInlineCalls: [FunctionCall] {
         FunctionCall.parseInline(node: node)
     }
+
+    // swift-syntax is not capable of knowing which closures are escaping
+    // and which are non-escaping, so here we define the swift standard library
+    // functions that accept non-escaping closures and are thus generally safe
+    // call `.self` from within the closure
+    public static let NonEscapingFunctionCalls = Set([
+        "forEach",
+        "map",
+        "compactMap",
+        "flatMap",
+        "filter",
+        "reduce",
+        "sorted",
+        "first",
+        "contains",
+        "allSatisfy",
+        "prefix",
+        "drop",
+        "sort",
+        "removeAll",
+        "partition",
+        "mapValues"
+    ])
 }
 
 // MARK: - Call, Argument, Token

@@ -36,11 +36,15 @@ final class SwitchTests: XCTestCase {
             }
         }
     
+        public func onViewAppear2() {
+            handler.someProperty.forEach { self.showLoading() }
+        }
+
         public func hideLoading() {}
         public func showLoading() {}
     }
     """.parsed()
-    
+
     private lazy var visitor = {
         DeclarationsCollector(
             sourceCodeLocation: SourceCodeLocation(
@@ -49,48 +53,56 @@ final class SwitchTests: XCTestCase {
             )
         )
     }()
-    
+
     override func setUp() {
         visitor.walk(sourceSyntax)
     }
-    
+
     func testParsesSwitch() throws {
         let function = visitor.classes.first!.functions.first!
         let `switch` = function.switches().first!
         XCTAssertTrue(`switch`.cases.count == 2)
     }
-    
+
     func testParsesSwitchCases() throws {
         let function = visitor.classes.first!.functions.first!
         let `switch` = function.switches().first!
         let cases = `switch`.cases
-        
+
         let items = cases.flatMap(\.items).compactMap {
             if case .literalExpression(let member) = $0 {
                 return member
             }
-            
+
             return nil
         }
-        
+
         XCTAssertTrue(items.count == 2)
         XCTAssertEqual(
             [".loading", ".success"],
             items
         )
     }
-    
+
     func testParsesSwitchCasesWithSelfReference() throws {
         let function = visitor.classes.first!.functions.first!
         let `switch` = function.switches().first!
-        
+
         XCTAssertTrue(`switch`.hasAnyClosureWithSelfReference)
     }
-    
+
     func testParsesSwitchCasesWithNoSelfReference() throws {
         let function = visitor.classes.first!.functions[1]
         let `switch` = function.switches().first!
-        
+
         XCTAssertFalse(`switch`.hasAnyClosureWithSelfReference)
+    }
+
+    func testParsesSwitchCasesWithNoSelfReference2() throws {
+        let function = visitor.classes.first!.functions[2]
+
+        XCTAssertTrue(function.hasAnyClosureWithSelfReference(ignoreKnownNonEscapingFunctionCalls: false))
+
+        XCTAssertFalse(function.hasAnyClosureWithSelfReference(ignoreKnownNonEscapingFunctionCalls: true))
     }
 }
