@@ -84,6 +84,12 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         functionCalls.contains { $0.hasClosureWithSelfReference }
     }
 
+    public func hasAnyClosureWithSelfReference(nonEscapingFunctionCalls: Set<String>) -> Bool {
+        functionCalls
+            .filter { !nonEscapingFunctionCalls.contains($0.call) }
+            .contains { $0.hasClosureWithSelfReference }
+    }
+
     internal init(node: CodeBlockItemListSyntax) {
         self.node = node
         
