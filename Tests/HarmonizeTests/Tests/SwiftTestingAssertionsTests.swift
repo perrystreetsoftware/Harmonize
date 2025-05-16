@@ -5,70 +5,136 @@
 //  Copyright (c) Perry Street Software 2024. All Rights Reserved.
 //
 
+#if canImport(Testing)
+
 import Foundation
 import Harmonize
 import HarmonizeSemantics
 import Testing
 
-private let sample = Harmonize.on {
-    """
-    func test() {}
-    """
-}
-
 @Suite struct SwiftTestingAssertionsTests {
-    @Test func thenExpectAllPasses() {
-        sample.functions()
-            .expectAll { function in function.name == "test" }
+    @Test func assertThatAssertTruePasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .functions()
+            .assertTrue { $0.name.starts(with: "on") }
     }
-
-    @Test func thenExpectAllFail() {
+    
+    @Test func assertThatAssertTrueFails() {
         withKnownIssue {
-            sample.functions()
-                .expectAll { function in function.name == "test2" }
+            Harmonize.on("Fixtures/SwiftTesting")
+                .functions()
+                .assertTrue { !$0.name.starts(with: "on") }
         }
-        
-        #expect(true)
     }
-
-    @Test func expectNoneToPass() {
-        sample.functions()
-            .expectNone { function in function.name == "test2" }
+    
+    @Test func assertThatAssertFalsePasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .functions()
+            .assertFalse { $0.name.endsWith("on") }
     }
-
-    @Test func expectNoneToFail() {
+    
+    @Test func assertThatAssertFalseFails() {
         withKnownIssue {
-            sample.functions()
-                .expectNone { function in function.name == "test" }
+            Harmonize.on("Fixtures/SwiftTesting")
+                .functions()
+                .assertFalse { $0.name.starts(with: "on") }
         }
-        
-        #expect(true)
     }
-
-    @Test func expectEmptyToPass() {
-        sample.functions()
-            .filter { $0.name == "test2" }
-            .expectEmpty()
+    
+    @Test func assertThatAssertEmptyPasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .functions()
+            .withNameEndingWith("on")
+            .assertEmpty()
     }
-
-    @Test func expectEmptyToFail() {
+    
+    @Test func assertThatAssertEmptyFails() {
         withKnownIssue {
-            sample.functions().expectEmpty()
+            Harmonize.on("Fixtures/SwiftTesting")
+                .functions()
+                .withNameStartingWith("on")
+                .assertEmpty()
         }
-        
-        #expect(true)
     }
-
-    @Test func expectNotEmptyToPass() {
-        sample.functions().expectNotEmpty()
+    
+    @Test func assertThatAssertNotEmptyPasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .functions()
+            .withNameStartingWith("on")
+            .assertNotEmpty()
     }
-
-    @Test func expectNotEmptyToFail() {
+    
+    @Test func assertThatAssertNotEmptyFails() {
         withKnownIssue {
-            [Class]().expectNotEmpty()
+            Harmonize.on("Fixtures/SwiftTesting")
+                .functions()
+                .withNameEndingWith("on")
+                .assertNotEmpty()
         }
-        
-        #expect(true)
     }
-
 }
+
+@Suite struct SwiftTestingSourceFileAssertionsTests {
+    @Test func assertThatAssertTruePasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .sources()
+            .assertTrue { $0.imports().withName(["Combine"]).isNotEmpty }
+    }
+    
+    @Test func assertThatAssertTrueFails() {
+        withKnownIssue {
+            Harmonize.on("Fixtures/SwiftTesting")
+                .sources()
+                .assertTrue { $0.imports().withName(["Combine"]).isEmpty }
+        }
+    }
+    
+    @Test func assertThatAssertFalsePasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .sources()
+            .assertFalse { $0.imports().withName(["Combine"]).isEmpty }
+    }
+    
+    @Test func assertThatAssertFalseFails() {
+        withKnownIssue {
+            Harmonize.on("Fixtures/SwiftTesting")
+                .sources()
+                .assertFalse { $0.imports().withName(["Combine"]).isNotEmpty }
+        }
+    }
+    
+    @Test func assertThatAssertEmptyPasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .sources()
+            .filter { $0.imports().contains { $0.name == "Foundation" } }
+            .assertEmpty()
+    }
+    
+    @Test func assertThatAssertEmptyFails() {
+        withKnownIssue {
+            Harmonize.on("Fixtures/SwiftTesting")
+                .sources()
+                .filter { $0.imports().contains { $0.name == "Combine" } }
+                .assertEmpty()
+        }
+    }
+    
+    @Test func assertThatAssertNotEmptyPasses() {
+        Harmonize.on("Fixtures/SwiftTesting")
+            .sources()
+            .filter { $0.imports().contains { $0.name == "Combine" } }
+            .assertNotEmpty()
+    }
+    
+    @Test func assertThatAssertNotEmptyFails() {
+        withKnownIssue {
+            Harmonize.on("Fixtures/SwiftTesting")
+                .sources()
+                .filter { $0.imports().contains { $0.name == "Foundation" } }
+                .assertNotEmpty()
+        }
+    }
+}
+
+
+#endif

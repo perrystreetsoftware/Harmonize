@@ -6,7 +6,6 @@
 //
 
 import Combine
-import Testing
 
 class SwiftTestingApp {
     let viewModel = SwiftTestingAppViewModel()
