@@ -10,34 +10,28 @@ on:
 
 jobs:
   macos:
-    name: MacOS - Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    name: MacOS
     strategy:
       matrix:
-        os: [macos-13]
-        swift: ["5.9"]
-    runs-on: ${{ matrix.os }}
+        xcode: [16.1]
+    runs-on: macos-14
     steps:
-      - uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ matrix.swift }}
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: latest-stable
+          xcode-version: ${{ matrix.xcode }}
       - uses: actions/checkout@v4
-      # https://github.com/actions/cache/blob/main/examples.md#swift---swift-package-manager
+    
       - uses: actions/cache@v4
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-spm-
-      - name: Build
-        run: swift build
       - name: Run MacOS Tests
         run: swift test
 
   ios:
-    name: iOS - Swift ${{ matrix.swift }} on ${{ matrix.os }}
+    name: iOS
     strategy:
       matrix:
         os: [macos-13]
