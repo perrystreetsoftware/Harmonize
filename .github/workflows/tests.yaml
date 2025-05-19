@@ -24,7 +24,7 @@ jobs:
       - name: Build
         run: swift build
       - name: Run MacOS Tests
-        run: swift test --enable-test-discovery --parallel --verbose
+        run: swift test
 
   ios:
     name: iOS
