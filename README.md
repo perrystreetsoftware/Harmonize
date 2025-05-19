@@ -52,6 +52,23 @@ final class ViewModelsInheritBaseViewModelSpec: XCTestCase {
 }
 ```
 
+### Example using Swift Testing:
+
+```Swift
+import Harmonize
+import Testing
+
+@Test
+func viewModelsInheritBaseViewModel() {
+    let viewModels = Harmonize.productionCode().classes()
+        .withNameEndingWith("ViewModel")
+        
+    viewModels.assertTrue(message: "All ViewModels must inherit from BaseViewModel") {
+        $0.inherits(from: "BaseViewModel")
+    }
+}
+```
+
 This lint rule enforces all ViewModels to inherit from `BaseViewModel`. Since it runs as a unit test, it will fail once it detects a violation. You can add exceptions or a baseline to this rule using the `withoutName` function:
 
 ```Swift
@@ -78,7 +95,7 @@ In Xcode:
 Or, manually add it to your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", from: "0.1.0"),
+.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", from: "0.2.0"),
 ```
 
 You can optionally create a dedicated Swift package for your Harmonize lint rules to separate them from the rest of the unit tests.
