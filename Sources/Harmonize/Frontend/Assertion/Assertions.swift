@@ -22,78 +22,100 @@ import HarmonizeSemantics
 import SwiftSyntax
 import XCTest
 
+#if canImport(Testing)
+  import Testing
+#endif
+
 /// An experimental extension providing assertions API for `Array` where `Element` conforms to `SyntaxNodeProviding`.
 /// These utilities enable behavior-driven assertions on the elements of the array, such as checking conditions, count, and emptiness.
 public extension Array where Element: SyntaxNodeProviding {
     /// Asserts that the specified condition is true for all elements in the array while also reporting found issues in the
-    /// original source code location. This is an experimental feature and may not function properly.
+    /// original source code location, if possible.
     ///
     /// - parameters:
-    ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
-    ///   - strict: Flag to indicate if the assertion should be in strict mode. If true then it will fail for empty collections.
-    ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
-    ///   - file: The file path to use in the assertion. Defaults to the calling file.
-    ///   - line: The line number to use in the assertion. Defaults to the calling line.
-    ///   - condition: A closure that takes an element and returns a `Bool` indicating if the condition is met.
-    /// - warning: This method will try report all issues in the original source code location when available.
+    ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
+    ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
+    ///   - fileID: The file ID to which the assertion should be attributed.
+    ///   - file: The file path to which the assertion should be attributed.
+    ///   - line: The line number to which the assertion should be attributed.
+    ///   - column: The line number to which the assertion should be attributed.
+    ///   - condition: The test condition assertion.
+    ///
     func assertTrue(
         message: String? = nil,
         strict: Bool = false,
-        showErrorAtSource: Bool = true,
+        fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
+        column: UInt = #column,
         condition: (Element) -> Bool
     ) {
         if strict && isEmpty {
-            XCTFail("Expected true but got empty collection instead.", file: file, line: line)
+            reportInline(
+                message: "Expected true but got empty collection instead.",
+                fileID: fileID,
+                file: file,
+                line: line,
+                column: column
+            )
             return
         }
         
-        let issues = elements(matching: { !condition($0) }).toXCTIssues(message: message)
-        guard !issues.isEmpty else { return }
+        let matchingElements = filter { !condition($0) }
         
-        fail(
-            issues: issues,
-            testMessage: message ?? "Expected true but was false on \(issues.count) elements.",
-            showIssueAtSource: showErrorAtSource,
+        report(
+            elements: matchingElements,
+            assertionMessage: "Expected true but was false on \(matchingElements.count) elements.",
+            additionalMessage: message,
+            fileID: fileID,
             file: file,
-            line: line
+            line: line,
+            column: column
         )
     }
     
     /// Asserts that the specified condition is false for all elements in the array while also reporting found issues in the
-    /// original source code location. This is an experimental feature and may not function properly.
+    /// original source code location, if possible.
     ///
     /// - parameters:
-    ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
-    ///   - strict: Flag to indicate if the assertion should be in strict mode. If true then it will fail for empty collections.
-    ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
-    ///   - file: The file path to use in the assertion. Defaults to the calling file.
-    ///   - line: The line number to use in the assertion. Defaults to the calling line.
+    ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
+    ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
+    ///   - fileID: The file ID to which the assertion should be attributed.
+    ///   - file: The file path to which the assertion should be attributed.
+    ///   - line: The line number to which the assertion should be attributed.
+    ///   - column: The line number to which the assertion should be attributed.
     ///   - condition: A closure that takes an element and returns a `Bool` indicating if the condition is met.
-    /// - warning: This method will try report all issues in the original source code location when available.
+    ///
     func assertFalse(
         message: String? = nil,
         strict: Bool = false,
-        showErrorAtSource: Bool = true,
+        fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
+        column: UInt = #column,
         condition: (Element) -> Bool
     ) {
         if strict && isEmpty {
-            XCTFail("Expected false but got empty collection instead.", file: file, line: line)
+            reportInline(
+                message: "Expected false but got empty collection instead.",
+                fileID: fileID,
+                file: file,
+                line: line,
+                column: column
+            )
             return
         }
         
-        let issues = elements(matching: { condition($0) }).toXCTIssues(message: message)
-        guard !issues.isEmpty else { return }
+        let matchingElements = filter { condition($0) }
         
-        fail(
-            issues: issues,
-            testMessage: message ?? "Expected false but was true on \(issues.count) elements.",
-            showIssueAtSource: showErrorAtSource,
+        report(
+            elements: matchingElements,
+            assertionMessage: "Expected false but was true on \(matchingElements.count) elements.",
+            additionalMessage: message,
+            fileID: fileID,
             file: file,
-            line: line
+            line: line,
+            column: column
         )
     }
     
@@ -102,82 +124,166 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - parameters:
     ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
     ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
-    ///   - file: The file path to use in the assertion. Defaults to the calling file.
-    ///   - line: The line number to use in the assertion. Defaults to the calling line.
+    ///   - fileID: The file ID to which the assertion should be attributed.
+    ///   - file: The file path to which the assertion should be attributed.
+    ///   - line: The line number to which the assertion should be attributed.
+    ///   - column: The line number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertEmpty(
         message: String? = nil,
-        showErrorAtSource: Bool = true,
+        fileID: StaticString = #fileID,
         file: StaticString = #filePath,
-        line: UInt = #line
+        line: UInt = #line,
+        column: UInt = #column
     ) {
         guard !isEmpty else { return }
         
-        let issues = toXCTIssues(message: message)
-        
-        fail(
-            issues: issues,
-            testMessage: message ?? "Expected empty collection got \(issues.count) elements instead.",
-            showIssueAtSource: showErrorAtSource,
+        report(
+            elements: self,
+            assertionMessage: "Expected empty collection got \(count) elements instead.",
+            additionalMessage: message,
+            fileID: fileID,
             file: file,
-            line: line
+            line: line,
+            column: column
         )
     }
     
     /// Asserts that the array is not empty.
     ///
     /// - parameters:
-    ///   - file: The file path to use in the assertion. Defaults to the calling file.
-    ///   - line: The line number to use in the assertion. Defaults to the calling line.
+    ///   - fileID: The file ID to which the assertion should be attributed.
+    ///   - file: The file path to which the assertion should be attributed.
+    ///   - line: The line number to which the assertion should be attributed.
+    ///   - column: The line number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertNotEmpty(
+        fileID: StaticString = #fileID,
         file: StaticString = #filePath,
-        line: UInt = #line
+        line: UInt = #line,
+        column: UInt = #column
     ) {
         guard isEmpty else { return }
-        XCTFail(
-            "Expected non empty collection got empty instead.",
-            file: file,
-            line: line
-        )
+        
+        let message = "Expected non empty collection got empty instead."
+        
+        if isRunningSwiftTesting {
+            #if canImport(Testing)
+            Issue.record(
+                .init(rawValue: message),
+                sourceLocation: .init(
+                    fileID: fileID.description,
+                    filePath: file.description,
+                    line: Int(line),
+                    column: Int(column))
+            )
+            #else
+            XCTFail(
+                message,
+                file: file,
+                line: line
+            )
+            #endif
+        } else {
+            XCTFail(
+                message,
+                file: file,
+                line: line
+            )
+        }
     }
     
     /// Asserts that the array has the specified number of elements.
     ///
     /// - parameters:
     ///   - count: The expected number of elements in the array.
-    ///   - file: The file path to use in the assertion. Defaults to the calling file.
-    ///   - line: The line number to use in the assertion. Defaults to the calling line.
+    ///   - fileID: The file ID to which the assertion should be attributed.
+    ///   - file: The file path to which the assertion should be attributed.
+    ///   - line: The line number to which the assertion should be attributed.
+    ///   - column: The line number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertCount(
         count: Int,
+        fileID: StaticString = #fileID,
         file: StaticString = #filePath,
-        line: UInt = #line
+        line: UInt = #line,
+        column: UInt = #column
     ) {
         guard self.count != count else { return }
         
         guard count > 0 else {
-            assertEmpty()
+            assertEmpty(fileID: fileID, file: file, line: line, column: column)
             return
         }
         
-        XCTFail(
-            "Assertion failed expecting count \(count) got \(self.count).",
-            file: file,
-            line: line
-        )
-    }
-    
-    private func elements(matching: (Element) -> Bool) -> [Element] {
-        filter(matching)
-    }
-    
-    private func toXCTIssues(message: String? = nil) -> [(String, XCTIssue)] {
-        compactMap {
-            let name = ($0 as? NamedDeclaration)?.name ?? String(describing: $0)
-            guard let issue = $0.issue(with: message ?? "\(name) did not match a test requirement.") else { return nil }
-            
-            return (name, issue)
+        let message = "Expected count to be \(count) got \(self.count)."
+        
+        if isRunningSwiftTesting {
+            #if canImport(Testing)
+            Issue.record(
+                .init(rawValue: message),
+                sourceLocation: .init(
+                    fileID: fileID.description,
+                    filePath: file.description,
+                    line: Int(line),
+                    column: Int(column))
+            )
+            #else
+            XCTFail(
+                message,
+                file: file,
+                line: line
+            )
+            #endif
+        } else {
+            XCTFail(
+                message,
+                file: file,
+                line: line
+            )
         }
+    }
+    
+    private func report(
+        elements: [Element],
+        assertionMessage: String,
+        additionalMessage: String? = nil,
+        fileID: StaticString = #fileID,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
+        var codeIssues: [CodeIssue] = []
+        
+        for element in elements {
+            if let issue = element.toCodeIssue(message: additionalMessage) {
+                codeIssues.append(issue)
+            }
+        }
+                
+        let loggableViolations = codeIssues.map {
+            "(\($0.fileId))\n\($0.name):\($0.line):\($0.column)"
+        }.joined(separator: "\n\n")
+        
+        let testName = additionalMessage ?? assertionMessage
+        let inlineMessage = """
+        \(testName)
+            
+        \(elements.count) issues were found:
+            
+        \(loggableViolations)
+        """
+        
+        reportIssues(codeIssues)
+        
+        guard elements.isNotEmpty else { return }
+        
+        reportInline(
+            message: inlineMessage,
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
 }
