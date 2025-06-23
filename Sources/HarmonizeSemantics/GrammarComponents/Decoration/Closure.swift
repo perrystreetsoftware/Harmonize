@@ -140,7 +140,7 @@ extension Closure {
         
         /// The text representation of the captured value.
         public var value: String {
-            node.expression.trimmedDescription
+            node.initializer?.value.trimmedDescription ?? ""
         }
         
         internal init(node: ClosureCaptureSyntax) {

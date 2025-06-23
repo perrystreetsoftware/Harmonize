@@ -13,7 +13,7 @@ let package = Package(
         .library(name: "HarmonizeUtils", targets: ["HarmonizeUtils"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "509.0.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.1"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3")
     ],
     targets: [
