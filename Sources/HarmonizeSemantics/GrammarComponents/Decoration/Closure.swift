@@ -58,15 +58,15 @@ public struct Closure: DeclarationDecoration, SyntaxNodeProviding {
     }
     
     public func isCapturing(valueOf value: String) -> Bool {
-        return captures.contains(where: { $0.value == value })
+        return captures.contains(where: { $0.node.name.text == value })
     }
     
     public func isCapturingWeak(valueOf value: String) -> Bool {
-        return captures.contains(where: { $0.isWeak() && $0.value == value })
+        return captures.contains(where: { $0.isWeak() && $0.node.name.text == value })
     }
     
     public func isCapturingUnowned(valueOf value: String) -> Bool {
-        return captures.contains(where: { $0.isUnowned() && $0.value == value })
+        return captures.contains(where: { $0.isUnowned() && $0.node.name.text == value })
     }
     
     internal init(node: ClosureExprSyntax) {
