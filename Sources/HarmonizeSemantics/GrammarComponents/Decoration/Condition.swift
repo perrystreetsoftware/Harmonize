@@ -147,7 +147,7 @@ extension Condition {
         ///
         /// This property extracts the name of the variable being bound in the optional binding, such as `"abc"` in `guard let abc = ...`.
         public var name: String {
-            if let identifier = node.as(IdentifierPatternSyntax.self) {
+            if let identifier = node.pattern.as(IdentifierPatternSyntax.self) {
                 return identifier.identifier.text
             }
             
