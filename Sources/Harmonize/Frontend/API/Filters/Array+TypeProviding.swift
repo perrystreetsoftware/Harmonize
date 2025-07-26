@@ -42,7 +42,17 @@ public extension Array where Element: Declaration & TypeProviding {
     func withType(named: String) -> [Element] {
         withType { $0.annotation == named }
     }
-    
+
+    /// Returns an array of elements with a type annotation that has a suffix with the specified name.
+    ///
+    /// - Parameter endingWith: The name of the suffix of the type annotation to match.
+    /// - Returns: An array of elements that have a type annotation with a suffix matching the specified name.
+    func withTypeEndingWith(_ suffixes: String...) -> [Element] {
+        withType {
+            $0.annotation.endsWithAny(suffixes)
+        }
+    }
+
     /// Returns an array of elements with a type annotation that matches the specified type.
     ///
     /// - Parameter type: The type to match against the type annotation.

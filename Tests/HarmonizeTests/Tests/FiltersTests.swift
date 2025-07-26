@@ -292,5 +292,17 @@ final class FiltersTests: XCTestCase {
             .sources()
             .withoutName(["InheritanceFixtures.swift"])
             .assertEmpty()
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .structs()
+            .variables()
+            .withTypeEndingWith("String")
+            .assertNotEmpty()
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .structs()
+            .variables()
+            .withTypeEndingWith("File")
+            .assertEmpty()
     }
 }
