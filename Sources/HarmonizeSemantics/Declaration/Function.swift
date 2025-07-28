@@ -67,6 +67,7 @@ extension Function: NamedDeclaration,
                     BodyProviding,
                     ParametersProviding,
                     FunctionsProviding,
+                    VariablesProviding,
                     SourceCodeProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
@@ -103,7 +104,11 @@ extension Function: NamedDeclaration,
     public var functions: [Function] {
         declarations.as(Function.self)
     }
-    
+
+    public var variables: [Variable] {
+        declarations.as(Variable.self)
+    }
+
     public var parameters: [Parameter] {
         node.signature.parameterClause.parameters.compactMap {
             Parameter(
