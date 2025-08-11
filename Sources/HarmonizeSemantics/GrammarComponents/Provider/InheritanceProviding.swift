@@ -29,6 +29,7 @@ public extension InheritanceProviding {
     /// Checks whether the declaration inherits from a given class or object type.
     ///
     /// - Parameter type: The object type to check against. This must be a class type (`AnyObject`).
+    /// - Parameter includeTransitiveInheritance: To also include transitive types inheritance. True by default.
     /// - Returns: `true` if the declaration inherits from the given class or object type, `false` otherwise.
     func inherits(from type: AnyObject.Type, includeTransitiveInheritance: Bool = true) -> Bool {
         inherits(from: String(describing: type.self), includeTransitiveInheritance: includeTransitiveInheritance)
@@ -38,6 +39,7 @@ public extension InheritanceProviding {
     ///
     /// - Parameters:
     ///   - name: The name of the class or object to check inheritance from.
+    ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
@@ -52,6 +54,7 @@ public extension InheritanceProviding {
     /// Checks whether the declaration conforms to a given protocol type.
     ///
     /// - Parameter type: The protocol type to check for conformance.
+    /// - Parameter includeTransitiveInheritance: To also include transitive types inheritance. True by default.
     /// - Returns: `true` if the declaration conforms to the given protocol, `false` otherwise.
     func conforms<T>(to type: T.Type, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
         conforms(
@@ -65,6 +68,7 @@ public extension InheritanceProviding {
     ///
     /// - Parameters:
     ///   - protos: A variadic list of protocol names to check for conformance.
+    ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
     ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: String..., includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
@@ -75,6 +79,7 @@ public extension InheritanceProviding {
     ///
     /// - Parameters:
     ///   - protos: An array of protocol names to check for conformance.
+    ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
     ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: [String], includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {

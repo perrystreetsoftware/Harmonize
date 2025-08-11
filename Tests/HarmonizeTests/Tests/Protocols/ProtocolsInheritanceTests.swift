@@ -85,4 +85,22 @@ final class ProtocolsConformanceTests: XCTestCase {
             .withNameEndingWith("ItemNavigator")
             .assertTrue { $0.conforms(to: "GenericCoordinator") }
     }
+    
+    func testConformanceFilters() {
+        let protos = Harmonize.on { protocolsSample }
+            .protocols()
+            .withoutName(["BaseCoordinator", "GenericCoordinator"])
+            .inheriting(from: "BaseCoordinator")
+            .map(\.name)
+        
+        XCTAssertEqual(protos, ["CoordinatorThrows", "MultiInheritProtocol"])
+        
+        let classes = Harmonize.on { protocolsSample }
+            .classes()
+            .withoutName(["BaseCoordinator", "GenericCoordinator"])
+            .inheriting(from: "BaseCoordinator")
+            .map(\.name)
+        
+        XCTAssertEqual(classes, ["FooCoordinator", "FooBarCoordinator", "BarCoordinator", "MachineCoordinator"])
+    }
 }
