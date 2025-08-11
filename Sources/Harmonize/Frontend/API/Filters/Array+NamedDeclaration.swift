@@ -63,6 +63,14 @@ public extension Array where Element: Declaration & NamedDeclaration {
         withoutName(names.contains)
     }
     
+    /// Filters the array to exclude elements whose names are in the given names.
+    ///
+    /// - parameter name: name to exclude.
+    /// - returns: An array containing the elements satisfying the given predicate.
+    func withoutName(_ name: String) -> [Element] {
+        withoutName(name.contains)
+    }
+    
     /// Filters the array to include only elements whose names end with any of the specified suffixes.
     ///
     /// - parameter suffixes: One or more suffixes to match.

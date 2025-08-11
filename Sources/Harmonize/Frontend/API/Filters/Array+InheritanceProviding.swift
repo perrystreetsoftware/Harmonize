@@ -27,7 +27,7 @@ public extension Array where Element: Declaration & InheritanceProviding {
     ///
     /// - Parameter anyClass: The class type to check inheritance against.
     /// - Returns: An array of elements that inherit from the specified class.
-    func inheriting(_ anyClass: AnyObject.Type) -> [Element] {
+    func inheriting(_ anyClass: AnyObject.Type, includeInherited: Bool = true) -> [Element] {
         filter { $0.inherits(from: anyClass) }
     }
     
@@ -35,7 +35,7 @@ public extension Array where Element: Declaration & InheritanceProviding {
     ///
     /// - Parameter name: The name of the class to check inheritance against.
     /// - Returns: An array of elements that inherit from the specified class name.
-    func inheriting(from name: String) -> [Element] {
+    func inheriting(from name: String, includeInherited: Bool = true) -> [Element] {
         filter { $0.inherits(from: name) }
     }
     
@@ -43,7 +43,7 @@ public extension Array where Element: Declaration & InheritanceProviding {
     ///
     /// - Parameter proto: The protocol type to check conformance against.
     /// - Returns: An array of elements that conform to the specified protocol.
-    func conforming<T>(to proto: T.Type) -> [Element] {
+    func conforming<T>(to proto: T.Type, includeInherited: Bool = true) -> [Element] {
         filter { $0.conforms(to: proto) }
     }
     
@@ -51,7 +51,7 @@ public extension Array where Element: Declaration & InheritanceProviding {
     ///
     /// - Parameter names: The protocol names to check conformance against.
     /// - Returns: An array of elements that conform to the specified protocol names.
-    func conforming(to names: String...) -> [Element] {
+    func conforming(to names: String..., includeInherited: Bool = true) -> [Element] {
         filter { $0.conforms(to: names) }
     }
     
@@ -59,7 +59,7 @@ public extension Array where Element: Declaration & InheritanceProviding {
     ///
     /// - Parameter names: An array of protocol names to check conformance against.
     /// - Returns: An array of elements that conform to the specified protocol names.
-    func conforming(to names: [String]) -> [Element] {
+    func conforming(to names: [String], includeInherited: Bool = true) -> [Element] {
         filter { $0.conforms(to: names) }
     }
 }

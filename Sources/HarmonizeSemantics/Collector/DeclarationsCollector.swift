@@ -85,6 +85,7 @@ package final class DeclarationsCollector: SyntaxVisitor {
         let `class` = startScopeWith(node) {
             Class(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
         }
+        cacheDeclarationSupertype(declaration: `class`)
         classes.append(`class`)
         return .visitChildren
     }
@@ -109,6 +110,7 @@ package final class DeclarationsCollector: SyntaxVisitor {
         let `protocol` = startScopeWith(node) {
             ProtocolDeclaration(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
         }
+        cacheDeclarationSupertype(declaration: `protocol`)
         protocols.append(`protocol`)
         return .visitChildren
     }
@@ -121,6 +123,7 @@ package final class DeclarationsCollector: SyntaxVisitor {
         let `struct` = startScopeWith(node) {
             Struct(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
         }
+        cacheDeclarationSupertype(declaration: `struct`)
         structs.append(`struct`)
         return .visitChildren
     }
@@ -157,6 +160,7 @@ package final class DeclarationsCollector: SyntaxVisitor {
         let `enum` = startScopeWith(node) {
             Enum(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
         }
+        cacheDeclarationSupertype(declaration: `enum`)
         enums.append(`enum`)
         return .visitChildren
     }
@@ -224,5 +228,11 @@ package final class DeclarationsCollector: SyntaxVisitor {
     private func endScope(for node: SyntaxProtocol) {
         declarationsCache.put(children: nodes[node._syntaxNode, default: []], for: node)
         _ = stack.popLast()
+    }
+    
+    private func cacheDeclarationSupertype(declaration: NamedDeclaration & InheritanceProviding) {
+        declaration.inheritanceTypesNames.forEach {
+            declarationsCache.put(subtype: declaration.name, of: $0)
+        }
     }
 }
