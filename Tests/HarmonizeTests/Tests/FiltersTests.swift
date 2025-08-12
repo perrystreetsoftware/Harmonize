@@ -57,6 +57,18 @@ final class FiltersTests: XCTestCase {
         scope.classes(includeNested: true)
             .withName(["BaseViewModel"])
             .assertCount(count: 1)
+
+        scope.classes(includeNested: true)
+            .withLastPathComponent(["NamedDeclarationsFixtures.swift"])
+            .assertCount(count: 3)
+
+        scope.classes(includeNested: true)
+            .withoutLastPathComponent(["XXX.swift"])
+            .assertCount(count: 3)
+
+        scope.classes(includeNested: true)
+            .withoutLastPathComponent(["NamedDeclarationsFixtures.swift"])
+            .assertCount(count: 0)
     }
     
     func testInheritanceProvidingFilters() throws {
