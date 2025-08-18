@@ -28,6 +28,8 @@ internal class DeclarationsCache {
     private var nodesAndDeclarations: [Syntax: [Declaration]] = [:]
     private var resolved: [Syntax: Declaration] = [:]
     
+    private var typeInheritanceCache: [String: [String]] = [:]
+    
     private init() {}
     
     func declarations(from parent: SyntaxProtocol) -> [Declaration] {
@@ -39,6 +41,43 @@ internal class DeclarationsCache {
     func put(children declarations: [Declaration], for parent: SyntaxProtocol) {
         locking {
             nodesAndDeclarations[parent._syntaxNode] = declarations
+        }
+    }
+    
+    func inheritedTypes(of type: String) -> [String] {
+        locking {
+            typeInheritanceCache[type, default: []]
+        }
+    }
+    
+    func supertype(of subtype: String) -> String? {
+        let matches = typeInheritanceCache.compactMap {
+            $0.value.contains(subtype) ? $0.key : nil
+        }
+
+        guard let directSupertype = matches.first else {
+            return nil
+        }
+
+        if matches.count == 1 {
+            return supertype(of: directSupertype) ?? directSupertype
+        }
+        
+        let firstSupertype = matches.first { supertype in
+            typeInheritanceCache.keys.contains(supertype)
+        }
+        
+        guard let firstSupertype else { return directSupertype }
+        return supertype(of: firstSupertype) ?? firstSupertype
+    }
+    
+    func put(subtype typeName: String, of type: String) {
+        locking {
+            var values = typeInheritanceCache[type, default: []]
+            if !values.contains(typeName) {
+                values.append(typeName)
+            }
+            typeInheritanceCache[type] = values
         }
     }
     
