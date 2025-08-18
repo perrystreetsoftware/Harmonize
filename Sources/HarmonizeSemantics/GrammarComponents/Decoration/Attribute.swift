@@ -111,6 +111,7 @@ public extension Attribute {
         case focusState = "FocusState"
         case gestureState = "GestureState"
         case observedObject = "ObservedObject"
+        case observable = "Observable"
         case sceneStorage = "SceneStorage"
         case state = "State"
         case stateObject = "StateObject"
