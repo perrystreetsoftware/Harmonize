@@ -270,6 +270,18 @@ final class FiltersTests: XCTestCase {
             .assertEmpty()
     }
 
+    func testReturnsFunctionsOfType() throws {
+        Harmonize.productionCode().on("Fixtures/Filters/Body")
+            .functions()
+            .withReturnType(Int.self)
+            .assertCount(count: 1)
+
+        Harmonize.productionCode().on("Fixtures/Filters/Body")
+            .functions()
+            .withReturnTypeEndingWith("Int")
+            .assertCount(count: 1)
+    }
+
     func testSourceCodeFilters() throws {
         Harmonize.productionCode().sources().withName("AccessorBlocksProviding.swift")
             .assertNotEmpty()
