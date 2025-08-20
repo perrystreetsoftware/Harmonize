@@ -12,6 +12,10 @@ class Body {
         func makeACall() {}
         _ = "function body"
     }
+
+    func testingReturnsInt() -> Int {
+        return 1
+    }
 }
 
 var appName = "Harmonize"

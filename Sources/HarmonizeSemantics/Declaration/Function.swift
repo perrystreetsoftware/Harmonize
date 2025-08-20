@@ -68,7 +68,8 @@ extension Function: NamedDeclaration,
                     ParametersProviding,
                     FunctionsProviding,
                     VariablesProviding,
-                    SourceCodeProviding {
+                    SourceCodeProviding,
+                    ReturnProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
     }
@@ -121,5 +122,9 @@ extension Function: NamedDeclaration,
     
     public var body: Body? {
         Body(node: node.body?.statements)
+    }
+
+    public var returnType: TypeAnnotation? {
+        returnClause?.typeAnnotation
     }
 }
