@@ -162,4 +162,14 @@ public extension Array where Element: Declaration & NamedDeclaration {
             prefixes.contains(where: $0.hasPrefix)
         }
     }
+
+    /// Filters the array to include only elements whose names match the specified regular expression.
+    ///
+    /// - parameter regex: The regular expression to match against element names.
+    /// - returns: A filtered array of elements whose names match the regular expression.
+    func withNameMatching<Output>(_ regex: Regex<Output>) -> [Element] {
+        withName { name in
+            name.firstMatch(of: regex) != nil
+        }
+    }
 }
