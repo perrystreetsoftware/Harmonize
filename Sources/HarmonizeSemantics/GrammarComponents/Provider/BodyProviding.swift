@@ -99,6 +99,14 @@ extension BodyProviding {
         body?.closures ?? []
     }
     
+    /// Retrieves all closure statements in this body with the given name.
+    ///
+    /// - Parameter named: The name of the Closure.
+    /// - Returns: An array of `Closure` objects representing all `switch` statements, or an empty array if none exist.
+    public func closures(named: String) -> [Closure] {
+        traverseClosures(name: named, body?.functionCalls ?? [])
+    }
+    
     /// Checks if the body is empty.
     ///
     /// - Returns: `true` if the body is empty, otherwise `false`.
@@ -119,5 +127,24 @@ extension BodyProviding {
     /// - Returns: A boolean value indicating whether any of the statement in this body has a self reference.
     public var hasAnyClosureWithSelfReference: Bool {
         return body?.hasAnyClosureWithSelfReference ?? false
+    }
+    
+    private func traverseClosures(name: String, _ functionCalls: [FunctionCall]) -> [Closure] {
+        var result: [Closure] = []
+
+        for functionCall in functionCalls {
+            if functionCall.call == name, let closure = functionCall.closure {
+                result.append(closure)
+            }
+            
+            let nestedClosures = traverseClosures(
+                name: name,
+                functionCall.closure?.functionCalls ?? []
+            )
+            
+            result.append(contentsOf: nestedClosures)
+        }
+
+        return result
     }
 }
