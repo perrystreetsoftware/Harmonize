@@ -172,4 +172,14 @@ public extension Array where Element: Declaration & BodyProviding {
     func withoutBodyContent(_ predicate: (String) -> Bool) -> [Element] {
         withBodyContent { !predicate($0) }
     }
+    
+    /// Filters the array to include only elements whose body contains closures with the given name that satisfy the predicate.
+    /// - parameter name: The name of the closure.
+    /// - parameter predicate: the condition agains't the given Closure.
+    /// - returns: An array of elements whose if statements match the specified predicate.
+    func withClosures(named: String, _ predicate: (Closure) -> Bool) -> [Element] {
+        filter {
+            $0.closures(named: named).contains(where: predicate)
+        }
+    }
 }

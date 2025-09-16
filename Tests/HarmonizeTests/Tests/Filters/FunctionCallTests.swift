@@ -33,4 +33,24 @@ final class FunctionCallTests: XCTestCase {
                 $0.invokes("something.onTap", includeClosures: true)
             }
     }
+    
+    func testFunctionCallClosures() {
+        sampleCode.classes()
+            .functions()
+            .withName("spec")
+            .withClosures(named: "beforeEach") { closure in
+                closure.invokes("nonExistentCall()")
+            }
+            .assertEmpty()
+    }
+    
+    func testBodyNestedFunctionCallClosures() {
+        sampleCode.classes()
+            .functions()
+            .withName("spec")
+            .assertTrue(message: "Every beforeEach must call setUp()") { function in
+                function.closures(named: "beforeEach")
+                    .allSatisfy { $0.invokes("setUp()") }
+            }
+    }
 }

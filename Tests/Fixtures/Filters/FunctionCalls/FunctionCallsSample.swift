@@ -21,6 +21,7 @@ class FunctionCallsSample {
     
     func spec() {
         beforeEach {
+            setUp()
             TestFactory().withValue(1)
         }
 
@@ -31,6 +32,7 @@ class FunctionCallsSample {
 
             when("it happens") {
                 beforeEach {
+                    setUp()
                     something.onTap()
                 }
                 
@@ -56,4 +58,6 @@ class FunctionCallsSample {
     private func then(_ that: String, body: () -> Void) {
         // ...
     }
+    
+    private func setUp() {}
 }
