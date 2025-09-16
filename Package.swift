@@ -6,7 +6,7 @@ import CompilerPluginSupport
 
 let package = Package(
     name: "Harmonize",
-    platforms: [.macOS(.v13), .iOS(.v13)],
+    platforms: [.macOS(.v13), .iOS(.v16)],
     products: [
         .library(name: "Harmonize", targets: ["Harmonize"]),
         .library(name: "HarmonizeSemantics", targets: ["HarmonizeSemantics"]),

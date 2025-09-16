@@ -69,8 +69,12 @@ final class FiltersTests: XCTestCase {
         scope.classes(includeNested: true)
             .withoutLastPathComponent(["NamedDeclarationsFixtures.swift"])
             .assertCount(count: 0)
+
+        scope.classes(includeNested: true)
+            .withNameMatching(Regex(#/App.*ViewModel/#))
+            .assertCount(count: 2)
     }
-    
+
     func testInheritanceProvidingFilters() throws {
         let scope = Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
         
