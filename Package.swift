@@ -14,7 +14,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "601.0.1"),
-        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3")
+        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3"),
+        .package(url: "https://github.com/pointfreeco/xctest-dynamic-overlay", from: "1.2.2"),
     ],
     targets: [
         .target(
@@ -23,6 +24,7 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "SwiftOperators", package: "swift-syntax"),
                 .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
                 "Yams",
                 "HarmonizeSemantics",
                 "HarmonizeUtils"

@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "xctest-dynamic-overlay",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/pointfreeco/xctest-dynamic-overlay",
+      "state" : {
+        "revision" : "b2ed9eabefe56202ee4939dd9fc46b6241c88317",
+        "version" : "1.6.1"
+      }
+    },
+    {
       "identity" : "yams",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/Yams.git",

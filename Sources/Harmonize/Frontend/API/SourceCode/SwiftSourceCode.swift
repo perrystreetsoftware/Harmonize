@@ -21,7 +21,6 @@ import Foundation
 import SwiftSyntax
 import SwiftParser
 import HarmonizeSemantics
-import XCTest
 
 /// Represents a source of Swift code, which can either be loaded from a URL or provided as a raw string.
 /// This class offers lazy loading of the source text, resolving it from either the provided URL or raw string.

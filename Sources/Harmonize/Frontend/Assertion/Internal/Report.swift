@@ -18,44 +18,20 @@
 //
 
 import Foundation
-import XCTest
-
-#if canImport(Testing)
-import Testing
-#endif
-
-internal var isRunningSwiftTesting: Bool {
-    #if canImport(Testing)
-    return Test.current != nil
-    #else
-    return false
-    #endif
-}
+import IssueReporting
 
 internal func reportIssues(_ issues: [CodeIssue]) {
-    func useXCT(issue: CodeIssue) {
-        issue.filePath.relativePath.withStaticString {
-            XCTFail(issue.message, file: $0, line: UInt(issue.line))
-        }
-    }
-    
     issues.forEach { issue in
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: issue.message),
-                sourceLocation: SourceLocation(
-                    fileID: issue.fileId,
-                    filePath: issue.filePath.relativePath,
-                    line: issue.line,
-                    column: issue.column
+        issue.fileId.withStaticString { fileID in
+            issue.filePath.relativePath.withStaticString { filePath in
+                IssueReporting.reportIssue(
+                    issue.message,
+                    fileID: fileID,
+                    filePath: filePath,
+                    line: UInt(issue.line),
+                    column: UInt(issue.column)
                 )
-            )
-            #else
-            useXCT(issue: issue)
-            #endif
-        } else {
-            useXCT(issue: issue)
+            }
         }
     }
 }
@@ -67,21 +43,11 @@ internal func reportInline(
     line: UInt = #line,
     column: UInt = #column
 ) {
-    if isRunningSwiftTesting {
-        #if canImport(Testing)
-        Issue.record(
-            .init(rawValue: message),
-            sourceLocation: SourceLocation(
-                fileID: fileID.description,
-                filePath: file.description,
-                line: Int(line),
-                column: Int(column)
-            )
-        )
-        #else
-        XCTFail(message, file: file, line: line)
-        #endif
-    } else {
-        XCTFail(message, file: file, line: line)
-    }
+    IssueReporting.reportIssue(
+        message,
+        fileID: fileID,
+        filePath: file,
+        line: line,
+        column: column
+    )
 }

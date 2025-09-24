@@ -20,11 +20,6 @@
 import Foundation
 import HarmonizeSemantics
 import SwiftSyntax
-import XCTest
-
-#if canImport(Testing)
-  import Testing
-#endif
 
 public extension Array where Element: SwiftSourceCode {
     /// Asserts that the specified condition is true for all elements in the array while also reporting issue at the source file.
@@ -161,32 +156,14 @@ public extension Array where Element: SwiftSourceCode {
     ) {
         guard isEmpty else { return }
         
-        let message = "Expected non empty collection got empty instead."
-        
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: message),
-                sourceLocation: .init(
-                    fileID: fileID.description,
-                    filePath: file.description,
-                    line: Int(line),
-                    column: Int(column))
-            )
-            #else
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-            #endif
-        } else {
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-        }
+        report(
+            elements: self,
+            assertionMessage: "Expected non empty collection got empty instead.",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
     
     /// Asserts that the array has the specified number of elements.
@@ -212,32 +189,14 @@ public extension Array where Element: SwiftSourceCode {
             return
         }
         
-        let message = "Expected count to be \(count) got \(self.count)."
-        
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: message),
-                sourceLocation: .init(
-                    fileID: fileID.description,
-                    filePath: file.description,
-                    line: Int(line),
-                    column: Int(column))
-            )
-            #else
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-            #endif
-        } else {
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-        }
+        report(
+            elements: self,
+            assertionMessage: "Expected count to be \(count) got \(self.count).",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
     
     private func report(
