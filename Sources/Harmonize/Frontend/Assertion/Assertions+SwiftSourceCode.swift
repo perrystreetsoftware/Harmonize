@@ -20,6 +20,7 @@
 import Foundation
 import HarmonizeSemantics
 import SwiftSyntax
+import IssueReporting
 
 public extension Array where Element: SwiftSourceCode {
     /// Asserts that the specified condition is true for all elements in the array while also reporting issue at the source file.
@@ -156,11 +157,10 @@ public extension Array where Element: SwiftSourceCode {
     ) {
         guard isEmpty else { return }
         
-        report(
-            elements: self,
-            assertionMessage: "Expected non empty collection got empty instead.",
+        IssueReporting.reportIssue(
+            "Expected non empty collection got empty instead.",
             fileID: fileID,
-            file: file,
+            filePath: file,
             line: line,
             column: column
         )
@@ -189,11 +189,10 @@ public extension Array where Element: SwiftSourceCode {
             return
         }
         
-        report(
-            elements: self,
-            assertionMessage: "Expected count to be \(count) got \(self.count).",
+        IssueReporting.reportIssue(
+            "Expected count to be \(count) got \(self.count).",
             fileID: fileID,
-            file: file,
+            filePath: file,
             line: line,
             column: column
         )

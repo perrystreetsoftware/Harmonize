@@ -161,11 +161,10 @@ public extension Array where Element: SyntaxNodeProviding {
     ) {
         guard isEmpty else { return }
         
-        report(
-            elements: self,
-            assertionMessage: "Expected non empty collection got empty instead.",
+        IssueReporting.reportIssue(
+            "Expected non empty collection got empty instead.",
             fileID: fileID,
-            file: file,
+            filePath: file,
             line: line,
             column: column
         )
@@ -194,11 +193,10 @@ public extension Array where Element: SyntaxNodeProviding {
             return
         }
         
-        report(
-            elements: self,
-            assertionMessage: "Expected count to be \(count) got \(self.count).",
+        IssueReporting.reportIssue(
+            "Expected count to be \(count) got \(self.count).",
             fileID: fileID,
-            file: file,
+            filePath: file,
             line: line,
             column: column
         )
