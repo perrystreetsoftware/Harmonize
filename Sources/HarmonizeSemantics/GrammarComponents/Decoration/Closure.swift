@@ -24,7 +24,8 @@ import SwiftSyntax
 /// This structure provides access to various components of a closure.
 public struct Closure: DeclarationDecoration, SyntaxNodeProviding {
     public let node: ClosureExprSyntax
-    
+    public let sourceCodeLocation: SourceCodeLocation?
+
     /// The parameters of the closure, represented as an array of strings.
     public var parameters: [String] {
         if let shortHandParams = node.signature?.parameterClause?.as(ClosureShorthandParameterListSyntax.self) {
@@ -69,25 +70,31 @@ public struct Closure: DeclarationDecoration, SyntaxNodeProviding {
         return captures.contains(where: { $0.isUnowned() && $0.node.name.text == value })
     }
     
-    internal init(node: ClosureExprSyntax) {
+    internal init(node: ClosureExprSyntax, sourceCodeLocation: SourceCodeLocation? = nil) {
         self.node = node
+        self.sourceCodeLocation = sourceCodeLocation
     }
     
-    internal init?(node: ClosureExprSyntax?) {
+    internal init?(node: ClosureExprSyntax?, sourceCodeLocation: SourceCodeLocation? = nil) {
         guard let node else { return nil }
         self.node = node
+        self.sourceCodeLocation = sourceCodeLocation
     }
 }
 
 // MARK: - AttributesProviding Comformance
 
-extension Closure: AttributesProviding, BodyProviding {
+extension Closure: AttributesProviding, BodyProviding, VariablesProviding {
     public var attributes: [Attribute] {
         node.signature?.attributes.attributes ?? []
     }
-    
+
     public var body: Body? {
-        Body(node: node.statements)
+        Body(node: node.statements, sourceCodeLocation: self.sourceCodeLocation)
+    }
+
+    public var variables: [Variable] {
+        body?.variables ?? []
     }
 }
 

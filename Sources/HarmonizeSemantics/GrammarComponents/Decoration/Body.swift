@@ -42,7 +42,9 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
     /// An array of ``InfixExpression`` representing all infix expression in this body.
     /// An infix expression is commonly represented by a left operand, an operator and a right operand such as `a = b`.
     public let infixExpressions: [InfixExpression]
-    
+
+    public let variables: [Variable]
+
     /// An array of ``FunctionCall`` objects representing all the top-level function call present in the body.
     /// e.g `someFunc()` is included but `value = getValue()` is part of Assignment. We don't include nested calls for now.
     public let functionCalls: [FunctionCall]
@@ -84,7 +86,7 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         functionCalls.contains { $0.hasClosureWithSelfReference }
     }
 
-    internal init(node: CodeBlockItemListSyntax) {
+    internal init(node: CodeBlockItemListSyntax, sourceCodeLocation: SourceCodeLocation?) {
         self.node = node
         
         var infixExpressions: [InfixExpression] = []
@@ -93,7 +95,8 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         var switches: [Switch] = []
         var guards: [Guard] = []
         var statements: [Statement] = []
-        
+        var variables: [Variable] = []
+
         for child in node {
             statements.append(Statement(node: child))
 
@@ -101,7 +104,21 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
                 infixExpressions.append(InfixExpression(node: infixOperator))
                 continue
             }
-            
+
+            if let sourceCodeLocation,
+                let variableDeclaration = child.item.as(VariableDeclSyntax.self) {
+                variables.append(
+                    contentsOf: variableDeclaration.bindings.map {
+                        return Variable(
+                            parentNode: variableDeclaration,
+                            node: $0,
+                            parent: nil,
+                            sourceCodeLocation: sourceCodeLocation
+                        )
+                    }
+                )
+            }
+
             if let expressionStatement = child.item.as(ExpressionStmtSyntax.self) {
                 if let ifNode = expressionStatement.expression.as(IfExprSyntax.self) {
                     ifs.append(If(node: ifNode))
@@ -120,7 +137,7 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
             }
             
             if let functionCallNode = child.item.as(FunctionCallExprSyntax.self) {
-                functionCalls.append(FunctionCall(node: functionCallNode))
+                functionCalls.append(FunctionCall(node: functionCallNode, sourceCodeLocation: sourceCodeLocation))
                 continue
             }
         }
@@ -131,10 +148,11 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         self.switches = switches
         self.guards = guards
         self.statements = statements
+        self.variables = variables
     }
 
-    internal init?(node: CodeBlockItemListSyntax?) {
+    internal init?(node: CodeBlockItemListSyntax?, sourceCodeLocation: SourceCodeLocation? = nil) {
         guard let node = node else { return nil }
-        self.init(node: node)
+        self.init(node: node, sourceCodeLocation: sourceCodeLocation)
     }
 }

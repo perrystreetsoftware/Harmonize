@@ -26,6 +26,8 @@ class FunctionCallsSample {
         }
 
         given("something") {
+            var foo: Int = 0
+
             then("there is something that will happen") {
                 // ...
             }

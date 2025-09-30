@@ -333,4 +333,23 @@ final class FiltersTests: XCTestCase {
             .withTypeEndingWith("File")
             .assertEmpty()
     }
+
+    func testClosureFilters() throws {
+        Harmonize.productionCode().on("Fixtures/Filters/FunctionCalls")
+            .classes()
+            .functions()
+            .closures()
+            .variables()
+            .withName("foo")
+            .assertNotEmpty()
+
+
+        Harmonize.productionCode().on("Fixtures/Filters/FunctionCalls")
+            .classes()
+            .functions()
+            .closures()
+            .variables()
+            .withType(Int.self)
+            .assertNotEmpty()
+    }
 }

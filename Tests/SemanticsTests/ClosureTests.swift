@@ -19,6 +19,7 @@ final class ClosuresTests: XCTestCase {
             execute { param in self.name.doSomething(param) }
     
             execute { [weak self] param in
+                var foo: Int = 0
                 self.name.doSomething(param)
             }
     
@@ -54,7 +55,15 @@ final class ClosuresTests: XCTestCase {
             function.functionCalls.compactMap(\.closure).flatMap(\.parameters)
         )
     }
-    
+
+    func testParsesClosuresVariables() throws {
+        let function = visitor.classes.first!.functions.first!
+        XCTAssertEqual(
+            ["foo"],
+            function.functionCalls.compactMap(\.closure).flatMap(\.variables).map(\.name)
+        )
+    }
+
     func testParsesClosuresReturnClause() throws {
         let function = visitor.classes.first!.functions.first!
         XCTAssertEqual(

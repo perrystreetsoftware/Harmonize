@@ -61,6 +61,7 @@ extension Function: NamedDeclaration,
                     ModifiersProviding,
                     ParentDeclarationProviding,
                     ClassesProviding,
+                    ClosuresProviding,
                     ProtocolsProviding,
                     EnumsProviding,
                     StructsProviding,
@@ -89,7 +90,11 @@ extension Function: NamedDeclaration,
     public var classes: [Class] {
         declarations.as(Class.self)
     }
-    
+
+    public var closures: [Closure] {
+        self.body?.closures ?? []
+    }
+
     public var enums: [Enum] {
         declarations.as(Enum.self)
     }
@@ -121,7 +126,7 @@ extension Function: NamedDeclaration,
     }
     
     public var body: Body? {
-        Body(node: node.body?.statements)
+        Body(node: node.body?.statements, sourceCodeLocation: sourceCodeLocation)
     }
 
     public var returnType: TypeAnnotation? {
