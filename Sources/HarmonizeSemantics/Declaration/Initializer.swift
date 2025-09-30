@@ -57,7 +57,7 @@ extension Initializer: AttributesProviding,
     }
 
     public var body: Body? {
-        Body(node: node.body?.statements)
+        Body(node: node.body?.statements, sourceCodeLocation: sourceCodeLocation)
     }
 
     public var modifiers: [Modifier] {

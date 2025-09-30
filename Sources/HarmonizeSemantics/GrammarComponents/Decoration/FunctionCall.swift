@@ -23,7 +23,8 @@ import SwiftSyntax
 public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     /// The syntax node representing the function call expression in the abstract syntax tree (AST).
     public let node: FunctionCallExprSyntax
-    
+    public let sourceCodeLocation: SourceCodeLocation?
+
     /// The name of the function or expression being called.
     ///
     /// This property extracts and returns the called expression (e.g., the function name or method) in its trimmed form.
@@ -112,7 +113,7 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     /// The `closure` would represent the block of code `{ print("Task is running!") }`.
     /// If no trailing closure is present, this property returns `nil`.
     public var closure: Closure? {
-        Closure(node: node.trailingClosure)
+        Closure(node: node.trailingClosure, sourceCodeLocation: sourceCodeLocation)
     }
     
     /// The additional trailing closure of the function call, if any.
@@ -165,8 +166,9 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
         node.trimmedDescription
     }
     
-    internal init(node: FunctionCallExprSyntax) {
+    internal init(node: FunctionCallExprSyntax, sourceCodeLocation: SourceCodeLocation? = nil) {
         self.node = node
+        self.sourceCodeLocation = sourceCodeLocation
     }
     
     private var internalInlineCalls: [FunctionCall] {

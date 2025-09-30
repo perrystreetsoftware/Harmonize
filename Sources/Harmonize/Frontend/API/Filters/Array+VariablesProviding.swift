@@ -31,7 +31,9 @@ public extension Array where Element: Declaration & VariablesProviding {
     func withVariables(_ predicate: (Variable) -> Bool) -> [Element] {
         with(\.variables) { $0.contains(where: predicate) }
     }
-    
+}
+
+public extension Array where Element: VariablesProviding {
     /// Returns an array of all variables from the elements in the array.
     ///
     /// - returns: An array of all `Variable` instances contained within the elements.
