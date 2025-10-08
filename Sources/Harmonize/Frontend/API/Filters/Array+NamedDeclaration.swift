@@ -163,6 +163,16 @@ public extension Array where Element: Declaration & NamedDeclaration {
         }
     }
 
+    /// Filters the array to exclude elements whose names end with any of the specified prefixes.
+    ///
+    /// - parameter suffixes: One or more suffixes to exclude.
+    /// - returns: A filtered array of elements whose names do not end with any of the provided suffixes.
+    func withoutNameEndingWith(_ suffixes: String...) -> [Element] {
+        withoutName {
+            suffixes.contains(where: $0.hasSuffix)
+        }
+    }
+
     /// Filters the array to include only elements whose names match the specified regular expression.
     ///
     /// - parameter regex: The regular expression to match against element names.
