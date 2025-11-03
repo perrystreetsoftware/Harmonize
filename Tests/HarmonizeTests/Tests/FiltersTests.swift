@@ -361,4 +361,16 @@ final class FiltersTests: XCTestCase {
             .withType(Int.self)
             .assertNotEmpty()
     }
+
+    func testExtensionsFilters() throws {
+        Harmonize.productionCode().on("Fixtures/Filters/Extensions")
+            .extensions()
+            .withTypeAnnotation("String")
+            .assertNotEmpty()
+
+        Harmonize.productionCode().on("Fixtures/Filters/Extensions")
+            .extensions()
+            .withTypeAnnotation("Int")
+            .assertEmpty()
+    }
 }

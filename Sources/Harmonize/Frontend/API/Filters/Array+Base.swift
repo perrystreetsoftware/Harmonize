@@ -2,7 +2,7 @@
 //  Array+Extensions.swift
 //  Harmonize
 //
-//  Copyright 2025 Perry Street Software Inc.
+//  Copyright 2024 Perry Street Software Inc.
 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,16 +17,9 @@
 //  limitations under the License.
 //
 
-import Foundation
-import HarmonizeSemantics
 
-/// An extension for arrays where the elements are `Extension` types,
-/// providing filtering functionality based on those Extensions.
-public extension Array where Element == Extension {
-    ///
-    /// - parameter predicate: A `String` value representing a type annotation.
-    /// - returns: An array of elements whose body matches the specified predicate.
-    func withTypeAnnotation(_ typeAnnotation: String) -> [Element] {
-        filter { $0.typeAnnotation?.name == typeAnnotation }
+extension Array {
+    public var isNotEmpty: Bool {
+        isEmpty == false
     }
 }
