@@ -327,6 +327,16 @@ final class FiltersTests: XCTestCase {
 
         Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
             .sources()
+            .withoutPrefix("Inheritance")
+            .assertEmpty()
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .sources()
+            .withoutPrefix("Blahblah")
+            .assertCount(count: 1)
+
+        Harmonize.productionCode().on("Fixtures/Filters/Inheritance")
+            .sources()
             .withoutName(["InheritanceFixtures.swift"])
             .assertEmpty()
 
