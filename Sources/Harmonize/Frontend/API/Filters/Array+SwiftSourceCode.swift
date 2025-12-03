@@ -105,6 +105,16 @@ public extension Array where Element: SwiftSourceCode {
         }
     }
 
+    /// Filters the array to include only elements whose names do not start with any of the specified prefixes.
+    ///
+    /// - parameter prefixes: One or more prefixes to exclude.
+    /// - returns: A filtered array of elements whose names do not start with any of the provided prefixes.
+    func withoutPrefix(_ prefixes: String...) -> [Element] {
+        withoutName {
+            prefixes.contains(where: $0.hasPrefix)
+        }
+    }
+
     /// Filters the array to include only elements whose names do not end with any of the specified suffixes.
     ///
     /// - parameter suffixes: One or more suffixes to exclude.
