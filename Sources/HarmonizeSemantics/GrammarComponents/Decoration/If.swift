@@ -49,7 +49,7 @@ public struct If: DeclarationDecoration, SyntaxNodeProviding {
 
 extension If: BodyProviding, ConditionsProviding {
     public var body: Body? {
-        Body(node: node.body.statements, sourceCodeLocation: nil)
+        Body(node: node.body.statements)
     }
     
     public var conditions: [Condition] {

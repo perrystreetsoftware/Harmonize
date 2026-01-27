@@ -56,7 +56,7 @@ public extension AccessorBlock {
 // MARK: - Providers
 extension AccessorBlock: BodyProviding {
     public var body: Body? {
-        Body(node: node.body?.statements, sourceCodeLocation: nil)
+        Body(node: node.body?.statements)
     }
 }
 
