@@ -30,7 +30,7 @@ jobs:
     name: iOS
     strategy:
       matrix:
-        os: [macos-13]
+        os: [macos-14]
         swift: ["5.9"]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
