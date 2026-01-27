@@ -27,31 +27,21 @@ jobs:
         run: swift test
 
   ios:
-    name: iOS
-    strategy:
-      matrix:
-        os: [macos-14]
-        swift: ["5.9"]
-    runs-on: ${{ matrix.os }}
+    name: iOS (Simulator Tests)
+    runs-on: macos-14
     timeout-minutes: 20
+
     steps:
-      - uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ matrix.swift }}
-      - uses: maxim-lobanov/setup-xcode@v1
+      - uses: actions/checkout@v4
+
+      - name: Set up Xcode
+        uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: latest-stable
-      - uses: actions/checkout@v3
-      # https://github.com/actions/cache/blob/main/examples.md#swift---swift-package-manager
-      - uses: actions/cache@v3
-        with:
-          path: .build
-          key: ${{ matrix.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ matrix.os }}-spm-
-
-      - name: Build
-        run: xcodebuild build -scheme Harmonize-Package -destination "OS=18.1,name=iPhone 16"
 
       - name: Run iOS Tests
-        run: xcodebuild test-without-building -scheme Harmonize-Package -destination "name=iPhone 16"
+        run: |
+          xcodebuild test \
+            -scheme Harmonize-Package \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug
