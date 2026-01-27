@@ -37,7 +37,7 @@ public final class SwiftSourceCode {
         }
         
         // Create new resolver and cache it
-        let newResolver = SourceFileSyntaxResolver(source: self, node: sourceFileSyntax)
+        let newResolver = SourceFileSyntaxResolver(source: self, node: foldedSourceFileSyntax ?? sourceFileSyntax)
         SwiftSourceCode.resolverCache[cacheKey] = newResolver
         return newResolver
     }()

@@ -37,10 +37,11 @@ internal class HarmonizeScopeBuilder {
         includingOnly: [String],
         exclusions: [String]
     ) -> String {
+        let fileKey = file.description
         let folderKey = folder ?? "nil"
         let inclusionsKey = includingOnly.joined(separator: ",")
         let exclusionsKey = exclusions.joined(separator: ",")
-        return "folder:\(folderKey)|including:\(inclusionsKey)|excluding:\(exclusionsKey)"
+        return "file:\(fileKey)|folder:\(folderKey)|including:\(inclusionsKey)|excluding:\(exclusionsKey)"
     }
 
     /// Shared cache across all HarmonizeScopeBuilder instances.
