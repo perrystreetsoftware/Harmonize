@@ -41,6 +41,6 @@ public struct Else: DeclarationDecoration, SyntaxNodeProviding {
 
 extension Else: BodyProviding {
     public var body: Body? {
-        Body(node: node.statements)
+        Body.cached(node: node.statements, sourceCodeLocation: nil)
     }
 }

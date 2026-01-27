@@ -56,7 +56,7 @@ public extension AccessorBlock {
 // MARK: - Providers
 extension AccessorBlock: BodyProviding {
     public var body: Body? {
-        Body(node: node.body?.statements)
+        Body.cached(node: node.body?.statements, sourceCodeLocation: nil)
     }
 }
 

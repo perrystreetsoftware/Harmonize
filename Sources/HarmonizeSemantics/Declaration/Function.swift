@@ -126,7 +126,7 @@ extension Function: NamedDeclaration,
     }
     
     public var body: Body? {
-        Body(node: node.body?.statements, sourceCodeLocation: sourceCodeLocation)
+        Body.cached(node: node.body?.statements, sourceCodeLocation: sourceCodeLocation)
     }
 
     public var returnType: TypeAnnotation? {

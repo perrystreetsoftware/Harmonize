@@ -21,17 +21,25 @@ import Foundation
 import SwiftSyntax
 import SwiftParser
 import HarmonizeSemantics
+import HarmonizeUtils
 import XCTest
 
 /// Represents a source of Swift code, which can either be loaded from a URL or provided as a raw string.
 /// This class offers lazy loading of the source text, resolving it from either the provided URL or raw string.
 public final class SwiftSourceCode {
+    /// Static cache for resolvers keyed by file path to avoid re-walking AST
+    private static let resolverCache = ConcurrentDictionary<String, SourceFileSyntaxResolver>()
+    
     /// Transforms Swift Syntax into the Semantics Models.
     internal lazy var resolver: SourceFileSyntaxResolver = {
-        // Not ideal as it will break lazy evaluation of the Source File Syntax.
-        // 'Fine' for this initial release, but we must rework this when Harmonize
-        // evolves to be a 'File Query' over swift files.
-        SourceFileSyntaxResolver(source: self, node: foldedSourceFileSyntax ?? sourceFileSyntax)
+        if let cached = SwiftSourceCode.resolverCache[cacheKey] {
+            return cached
+        }
+        
+        // Create new resolver and cache it
+        let newResolver = SourceFileSyntaxResolver(source: self, node: sourceFileSyntax)
+        SwiftSourceCode.resolverCache[cacheKey] = newResolver
+        return newResolver
     }()
 
     /// The URL pointing to the Swift source file, if provided. Nil if `source` is provided directly as string.
@@ -42,6 +50,15 @@ public final class SwiftSourceCode {
     
     /// Returns the Swift source code as a string. This returns either the URL or using the raw string, depending on which was initialized.
     public let source: String
+    
+    /// Cache key for syntax caching. Uses file path for file-based sources,
+    /// or a hash of the source content for in-memory sources.
+    internal lazy var cacheKey: String = {
+        if let url = url {
+            return url.absoluteString
+        }
+        return "source:\(source.hashValue)"
+    }()
     
     /// Initializes the `SwiftSourceCode` with a URL pointing to a Swift source file.
     ///

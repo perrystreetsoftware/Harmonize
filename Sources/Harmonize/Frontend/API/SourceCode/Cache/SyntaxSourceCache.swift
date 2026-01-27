@@ -27,9 +27,13 @@ import HarmonizeUtils
  * That's a very simple yet functional in memory caching mechanism based on SwiftLint's implementation
  * for sourceKitten symbols. This is far from making parsing optimal but helps avoid increasing time between
  * tests run. It compensates SwiftSyntax's parsing performance issue when you run all tests.
+ *
+ * Cache keys are based on file path (for file-based sources) or a hash of the source content
+ * (for in-memory sources). This allows cache hits across different SwiftSourceCode instances
+ * that represent the same file.
  */
 internal class SyntaxSourceCache<Syntax> {
-    private var elements: ConcurrentDictionary<UUID, Syntax> = ConcurrentDictionary()
+    private var elements: ConcurrentDictionary<String, Syntax> = ConcurrentDictionary()
     private let factory: (SwiftSourceCode) -> Syntax
     
     init(factory: @escaping (SwiftSourceCode) -> Syntax) {
@@ -37,9 +41,10 @@ internal class SyntaxSourceCache<Syntax> {
     }
     
     func get(_ source: SwiftSourceCode) -> Syntax {
-        guard let element = elements[source.id] else {
+        let cacheKey = source.cacheKey
+        guard let element = elements[cacheKey] else {
             let newElement = factory(source)
-            elements[source.id] = newElement
+            elements[cacheKey] = newElement
             return newElement
         }
         
@@ -47,11 +52,11 @@ internal class SyntaxSourceCache<Syntax> {
     }
     
     func set(_ source: SwiftSourceCode, value: Syntax) {
-        elements[source.id] = value
+        elements[source.cacheKey] = value
     }
     
-    func removeValue(forKey uuid: UUID) -> Syntax? {
-        elements.removeValue(forKey: uuid)
+    func removeValue(forKey key: String) -> Syntax? {
+        elements.removeValue(forKey: key)
     }
     
     func removeAll() {

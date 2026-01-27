@@ -43,7 +43,7 @@ public struct Guard: DeclarationDecoration, SyntaxNodeProviding {
 
 extension Guard: BodyProviding, ConditionsProviding {
     public var body: Body? {
-        Body(node: node.body.statements)
+        Body.cached(node: node.body.statements, sourceCodeLocation: nil)
     }
     
     public var conditions: [Condition] {
