@@ -51,7 +51,7 @@ jobs:
             ${{ matrix.os }}-spm-
 
       - name: Build
-        run: xcodebuild build -scheme Harmonize-Package -destination "OS=18.0,name=iPhone 16"
+        run: xcodebuild build -scheme Harmonize-Package -destination "OS=18.1,name=iPhone 16"
 
       - name: Run iOS Tests
         run: xcodebuild test-without-building -scheme Harmonize-Package -destination "name=iPhone 16"
