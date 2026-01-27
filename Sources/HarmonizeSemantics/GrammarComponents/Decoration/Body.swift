@@ -22,32 +22,6 @@ import SwiftSyntax
 
 /// A struct that represents the body of a declaration.
 public struct Body: DeclarationDecoration, SyntaxNodeProviding {
-    /// Cache for Body objects keyed by syntax node ID to avoid re-parsing
-    private static var cache: [SyntaxIdentifier: Body] = [:]
-    private static let cacheLock = NSLock()
-    
-    /// Factory method that returns cached Body or creates new one
-    private static func createCached(node: CodeBlockItemListSyntax, sourceCodeLocation: SourceCodeLocation?) -> Body {
-        let nodeId = node.id
-        
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        
-        if let existing = cache[nodeId] {
-            return existing
-        }
-        
-        let body = Body(node: node, sourceCodeLocation: sourceCodeLocation)
-        cache[nodeId] = body
-        return body
-    }
-    
-    /// Factory method for optional node - returns cached Body or creates new one
-    internal static func cached(node: CodeBlockItemListSyntax?, sourceCodeLocation: SourceCodeLocation?) -> Body? {
-        guard let node = node else { return nil }
-        return createCached(node: node, sourceCodeLocation: sourceCodeLocation)
-    }
-    
     /// The syntax node representing the type annotation in the abstract syntax tree (AST).
     public let node: CodeBlockItemListSyntax
 

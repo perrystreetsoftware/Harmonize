@@ -43,7 +43,7 @@ public struct GetterBlock: DeclarationDecoration, SyntaxNodeProviding {
 
 extension GetterBlock: BodyProviding {
     public var body: Body? {
-        Body.cached(node: node, sourceCodeLocation: nil)
+        Body(node: node, sourceCodeLocation: nil)
     }
 }
 

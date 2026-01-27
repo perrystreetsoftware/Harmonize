@@ -127,7 +127,7 @@ extension Switch {
 
 extension Switch.Case: BodyProviding {
     public var body: Body? {
-        Body.cached(node: node.statements, sourceCodeLocation: nil)
+        Body(node: node.statements, sourceCodeLocation: nil)
     }
 }
 

@@ -90,7 +90,7 @@ extension Closure: AttributesProviding, BodyProviding, VariablesProviding {
     }
 
     public var body: Body? {
-        Body.cached(node: node.statements, sourceCodeLocation: self.sourceCodeLocation)
+        Body(node: node.statements, sourceCodeLocation: self.sourceCodeLocation)
     }
 
     public var variables: [Variable] {
