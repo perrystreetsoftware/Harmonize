@@ -27,7 +27,7 @@ jobs:
         run: swift test
 
   ios:
-    name: iOS (Simulator Tests)
+    name: iOS
     runs-on: macos-14
     timeout-minutes: 20
 
