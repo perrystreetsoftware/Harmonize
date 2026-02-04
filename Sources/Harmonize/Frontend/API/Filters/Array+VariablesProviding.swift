@@ -40,4 +40,8 @@ public extension Array where Element: VariablesProviding {
     func variables() -> [Variable] {
         flatMap { $0.variables }
     }
+
+    func getters() -> [GetterBlock] {
+        flatMap { $0.variables.compactMap(\.getter) }
+    }
 }

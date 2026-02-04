@@ -105,7 +105,7 @@ extension Variable: NamedDeclaration,
     }
     
     public var getter: GetterBlock? {
-        GetterBlock.getter(node.accessorBlock)
+        GetterBlock.getter(node.accessorBlock, sourceCodeLocation: sourceCodeLocation)
     }
 }
 

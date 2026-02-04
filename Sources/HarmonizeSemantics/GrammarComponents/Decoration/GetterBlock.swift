@@ -21,21 +21,24 @@ import Foundation
 import SwiftSyntax
 
 /// The representation of a computed-property getter block.
-public struct GetterBlock: DeclarationDecoration, SyntaxNodeProviding {
+public struct GetterBlock: Declaration, DeclarationDecoration, SyntaxNodeProviding, SourceCodeProviding {
     /// The syntax node representing the getter block from a computed-property in the abstract syntax tree (AST).
     public let node: CodeBlockItemListSyntax
-    
+    public let sourceCodeLocation: SourceCodeLocation
+
     public var description: String {
         node.trimmedDescription
     }
     
-    init(node: CodeBlockItemListSyntax) {
+    init(node: CodeBlockItemListSyntax, sourceCodeLocation: SourceCodeLocation) {
         self.node = node
+        self.sourceCodeLocation = sourceCodeLocation
     }
     
-    init?(node: CodeBlockItemListSyntax?) {
+    init?(node: CodeBlockItemListSyntax?, sourceCodeLocation: SourceCodeLocation) {
         guard let node = node else { return nil }
         self.node = node
+        self.sourceCodeLocation = sourceCodeLocation
     }
 }
 
@@ -50,14 +53,14 @@ extension GetterBlock: BodyProviding {
 // MARK: - Factory
 
 extension GetterBlock {
-    static func getter(_ node: AccessorBlockSyntax?) -> GetterBlock? {
+    static func getter(_ node: AccessorBlockSyntax?, sourceCodeLocation: SourceCodeLocation) -> GetterBlock? {
         guard let node = node else { return nil }
         
         return switch node.accessors {
         case .accessors(_):
             nil
         case .getter(let block):
-            Self(node: block)
+            Self(node: block, sourceCodeLocation: sourceCodeLocation)
         }
     }
 }
