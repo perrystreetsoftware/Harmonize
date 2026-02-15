@@ -20,10 +20,10 @@
 import SwiftSyntax
 
 /// A struct that represents a function call in Swift code.
-public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
+public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding, SourceCodeProviding {
     /// The syntax node representing the function call expression in the abstract syntax tree (AST).
     public let node: FunctionCallExprSyntax
-    public let sourceCodeLocation: SourceCodeLocation?
+    public let sourceCodeLocation: SourceCodeLocation
 
     /// The name of the function or expression being called.
     ///
@@ -35,10 +35,10 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
         } else if let ref = node.calledExpression.as(DeclReferenceExprSyntax.self) {
             return ref.baseName.text
         }
-        
+
         return node.calledExpression.trimmedDescription
     }
-    
+
     /// Returns all nested inline calls present in this function call, if any.
     ///
     /// Given the following code
@@ -57,13 +57,13 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
         let calls = internalInlineCalls
         return calls.isEmpty ? [] : calls + [self]
     }
-    
+
     /// Returns all closures present in this function call if it is an inlined function call expression, or its single closure if any.
     /// This will return empty if this function has no trailing closure at all.
     public var inlineClosures: [Closure] {
         (internalInlineCalls.map(\.closure) + [closure]).compactMap { $0 }
     }
-    
+
     /// The name of the function or expression called inlined.
     ///
     /// This property returns the complete call expression trimming arguments, closures body and newlines.
@@ -84,7 +84,7 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     public var inlineCallExpression: String {
         tokens.map(\.value).joined(separator: ".")
     }
-        
+
     /// The arguments passed to the function call.
     ///
     /// This property returns an array of ``Argument``, each representing an argument passed to the function.
@@ -98,7 +98,7 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
             )
         }
     }
-    
+
     /// The trailing closure of the function call, if present.
     ///
     /// This property returns an optional ``Closure`` representing the trailing closure attached to the function call.
@@ -115,22 +115,22 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     public var closure: Closure? {
         Closure(node: node.trailingClosure, sourceCodeLocation: sourceCodeLocation)
     }
-    
+
     /// The additional trailing closure of the function call, if any.
     public var additionalClosures: [Closure] {
         node.additionalTrailingClosures.compactMap { Closure(node: $0.closure) }
     }
-    
+
     /// - Returns: if the given function call is a trailing closure.
     public var isClosure: Bool {
         closure != nil
     }
-    
+
     /// - Returns: true if the given function call refers to self.
     public var isSelfReference: Bool {
         node.calledExpression.as(MemberAccessExprSyntax.self)?.base?.trimmedDescription == "self"
     }
-    
+
     /// - Returns: true if the given function call has a closure with self reference.
     public var hasClosureWithSelfReference: Bool {
         let hasSelfRefInClosure = closure?.hasSelfReference ?? false
@@ -138,7 +138,7 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
         let hasSelfRefInInlineCalls = internalInlineCalls.contains(where: \.hasClosureWithSelfReference)
         return hasSelfRefInClosure || hasSelfRefInAdditionalClosure || hasSelfRefInInlineCalls
     }
-    
+
     public var tokens: [Token] {
         return node.tokens(viewMode: .all)
             .compactMap { token in
@@ -165,14 +165,25 @@ public struct FunctionCall: DeclarationDecoration, SyntaxNodeProviding {
     public var description: String {
         node.trimmedDescription
     }
-    
+
     internal init(node: FunctionCallExprSyntax, sourceCodeLocation: SourceCodeLocation? = nil) {
         self.node = node
-        self.sourceCodeLocation = sourceCodeLocation
+        self.sourceCodeLocation = sourceCodeLocation ?? Self.defaultSourceCodeLocation(for: node)
     }
-    
+
     private var internalInlineCalls: [FunctionCall] {
-        FunctionCall.parseInline(node: node)
+        FunctionCall.parseInline(node: node, sourceCodeLocation: sourceCodeLocation)
+    }
+
+    private static func defaultSourceCodeLocation(for node: FunctionCallExprSyntax) -> SourceCodeLocation {
+        guard let sourceFileTree = node.root.as(SourceFileSyntax.self) else {
+            preconditionFailure("Unable to resolve SourceFileSyntax for FunctionCall node")
+        }
+
+        return SourceCodeLocation(
+            sourceFilePath: nil,
+            sourceFileTree: sourceFileTree
+        )
     }
 }
 
@@ -189,7 +200,7 @@ public extension FunctionCall {
         /// This is the label specified in the function call (e.g., `name` in `greet(name: "John")`).
         /// If the argument has no label, this property is `nil`.
         public let label: String?
-        
+
         /// The value of the argument as a `String`.
         ///
         /// This represents the value being passed to the function. For example, in `greet(name: "John")`,
@@ -219,22 +230,26 @@ extension FunctionCall: FunctionCallsProviding {
     public var functionCalls: [FunctionCall] {
         closure?.functionCalls ?? []
     }
-    
-    private static func parseInline(node: FunctionCallExprSyntax) -> [FunctionCall] {
+
+    private static func parseInline(
+        node: FunctionCallExprSyntax,
+        sourceCodeLocation: SourceCodeLocation
+    ) -> [FunctionCall] {
         var results: [FunctionCall] = []
-        
+
         func traverse(node: ExprSyntax?) {
             guard let node = node else { return }
-                
+
             if let funcCall = node.as(FunctionCallExprSyntax.self) {
-                results.append(FunctionCall(node: funcCall))
+                results.append(FunctionCall(node: funcCall, sourceCodeLocation: sourceCodeLocation))
                 traverse(node: funcCall.calledExpression)
             } else if let memberAccessExpr = node.as(MemberAccessExprSyntax.self) {
                 traverse(node: memberAccessExpr.base)
             }
         }
-        
+
         traverse(node: node.calledExpression)
         return results.reversed()
     }
 }
+

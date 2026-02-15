@@ -27,20 +27,20 @@ internal struct CodeIssue {
     let line: Int
     let column: Int
     let filePath: URL
-    
+
     var fileId: String {
         let components = filePath.pathComponents
-        
+
         guard
             let sources = components.firstIndex(of: "Sources"),
             sources + 1 < components.count
         else {
             return "UnknownModule/\(filePath.lastPathComponent)"
         }
-        
+
         let moduleName = components[sources + 1]
         let fileName = filePath.lastPathComponent
-        
+
         return "\(moduleName)/\(fileName)"
     }
 }
@@ -48,7 +48,7 @@ internal struct CodeIssue {
 internal extension SwiftSourceCode {
     func toCodeIssue(message: String?) -> CodeIssue? {
         guard let sourcePath = filePath else { return nil }
-        
+
         let name = fileName ?? "UnknownFile"
         let message = message ?? "\(name) didn't match the test requirement."
 
@@ -66,19 +66,19 @@ internal extension SyntaxNodeProviding {
     func toCodeIssue(message: String?) -> CodeIssue? {
         let name = (self as? NamedDeclaration)?.name ?? String(describing: self)
         let message = message ?? "\(name) didn't match the test requirement."
-        
+
         guard let sourceCodeProvider = self as? SourceCodeProviding else { return nil }
-        
+
         guard let sourcePath = sourceCodeProvider.sourceCodeLocation.sourceFilePath
         else { return nil }
-        
+
         let locationCoverter = SourceLocationConverter(
             fileName: sourcePath.relativePath,
             tree: sourceCodeProvider.sourceCodeLocation.sourceFileTree
         )
-        
+
         let location = self.node.startLocation(converter: locationCoverter)
-        
+
         return CodeIssue(
             name: name,
             message: message,
