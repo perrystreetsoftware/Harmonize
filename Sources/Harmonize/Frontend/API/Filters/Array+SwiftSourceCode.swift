@@ -124,4 +124,75 @@ public extension Array where Element: SwiftSourceCode {
             suffixes.contains(where: $0.hasSuffix)
         }
     }
+
+    // MARK: - Declaration Accessors
+
+    /// Returns all classes from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested classes. Defaults to `true`.
+    /// - returns: A flat array of all classes across all source files.
+    func classes(includeNested: Bool = true) -> [Class] {
+        flatMap { $0.classes(includeNested: includeNested) }
+    }
+
+    /// Returns all structs from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested structs. Defaults to `true`.
+    /// - returns: A flat array of all structs across all source files.
+    func structs(includeNested: Bool = true) -> [Struct] {
+        flatMap { $0.structs(includeNested: includeNested) }
+    }
+
+    /// Returns all enums from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested enums. Defaults to `true`.
+    /// - returns: A flat array of all enums across all source files.
+    func enums(includeNested: Bool = true) -> [Enum] {
+        flatMap { $0.enums(includeNested: includeNested) }
+    }
+
+    /// Returns all extensions from all source files in the array.
+    ///
+    /// - returns: A flat array of all extensions across all source files.
+    func extensions() -> [Extension] {
+        flatMap { $0.extensions() }
+    }
+
+    /// Returns all functions from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested functions. Defaults to `true`.
+    /// - returns: A flat array of all functions across all source files.
+    func functions(includeNested: Bool = true) -> [Function] {
+        flatMap { $0.functions(includeNested: includeNested) }
+    }
+
+    /// Returns all variables from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested variables. Defaults to `true`.
+    /// - returns: A flat array of all variables across all source files.
+    func variables(includeNested: Bool = true) -> [Variable] {
+        flatMap { $0.variables(includeNested: includeNested) }
+    }
+
+    /// Returns all protocols from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested protocols. Defaults to `true`.
+    /// - returns: A flat array of all protocols across all source files.
+    func protocols(includeNested: Bool = true) -> [ProtocolDeclaration] {
+        flatMap { $0.protocols(includeNested: includeNested) }
+    }
+
+    /// Returns all initializers from all source files in the array.
+    ///
+    /// - returns: A flat array of all initializers across all source files.
+    func initializers() -> [Initializer] {
+        flatMap { $0.initializers() }
+    }
+
+    /// Returns all imports from all source files in the array.
+    ///
+    /// - returns: A flat array of all imports across all source files.
+    func imports() -> [Import] {
+        flatMap { $0.imports() }
+    }
 }
