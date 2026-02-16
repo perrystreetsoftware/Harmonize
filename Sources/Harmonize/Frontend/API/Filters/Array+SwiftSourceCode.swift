@@ -105,6 +105,27 @@ public extension Array where Element: SwiftSourceCode {
         }
     }
 
+    /// Filters the array to include only elements whose names start with any of the specified prefixes.
+    ///
+    /// - parameter prefixes: One or more prefixes to match.
+    /// - returns: A filtered array of elements whose names start with one of the provided prefixes.
+    func withPrefix(_ prefixes: String...) -> [Element] {
+        withName {
+            prefixes.contains(where: $0.hasPrefix)
+        }
+    }
+
+    /// Filters the array to include only elements whose names start with any of the specified prefixes.
+    /// Identical to method above, just matches Konsist naming
+    ///
+    /// - parameter prefixes: One or more prefixes to match.
+    /// - returns: A filtered array of elements whose names start with one of the provided prefixes.
+    func withNameStartingWith(_ prefixes: String...) -> [Element] {
+        withName {
+            prefixes.contains(where: $0.hasPrefix)
+        }
+    }
+
     /// Filters the array to include only elements whose names do not start with any of the specified prefixes.
     ///
     /// - parameter prefixes: One or more prefixes to exclude.
