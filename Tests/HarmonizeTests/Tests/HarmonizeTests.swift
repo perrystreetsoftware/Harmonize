@@ -28,11 +28,12 @@ final class HarmonizeTests: XCTestCase {
     }
 
     func testMultipleExcludingExcludesDifferentClasses() throws {
-        let allCode = Harmonize.productionAndTestCode()
-        let excludingFilters = allCode.excluding("Fixtures/Filters")
-        let excludingSampleApp = allCode.excluding("Fixtures/SampleApp")
+        let productionCode = Harmonize.productionCode()
+        let excludingCore = productionCode.excluding("Core")
+        let excludingFrontend = productionCode.excluding("Frontend")
 
-        XCTAssertNotEqual(excludingFilters.classes(), excludingSampleApp.classes())
+        XCTAssertNotEqual(excludingCore.sources(), excludingFrontend.sources())
+        XCTAssertNotEqual(excludingCore.classes(), excludingFrontend.classes())
     }
 
     func testCreatesScopesWithProductionAndTestCode() throws {
