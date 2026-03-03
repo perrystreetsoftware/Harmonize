@@ -6,6 +6,8 @@
 
 This allows your team to keep your codebase clean, maintainable, and consistent as it grows, without relying on manual code reviews.
 
+Architectural linters like Harmonize further enable teams to formally verify AI-generated code in deterministic ways.
+
 Harmonize aims to solve the limitations of regex-based linters such as [SwiftLint](https://github.com/realm/SwiftLint), which focus primarily on Swift style and simple conventions. Inspired by [Konsist](https://github.com/LemonAppDev/konsist) for [Kotlin](https://proandroiddev.com/stop-debating-in-code-reviews-start-enforcing-with-lint-rules-6632c907ea94) and [ArchUnit](https://www.archunit.org/) for [Java](https://www.baeldung.com/java-archunit-intro), Harmonize provides a richer, semantic way to enforce your project's architecture and structural guidelines.
 
 ## Usage
