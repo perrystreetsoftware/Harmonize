@@ -51,24 +51,45 @@ internal class DeclarationsCache {
     }
     
     func supertype(of subtype: String) -> String? {
-        let matches = typeInheritanceCache.compactMap {
-            $0.value.contains(subtype) ? $0.key : nil
-        }
+        let cacheCopy = locking { typeInheritanceCache }
+        return findSupertype(of: subtype, in: cacheCopy, visited: [])
+    }
+
+    private func findSupertype(
+        of subtype: String,
+        in cache: [String: [String]],
+        visited: Set<String>
+    ) -> String? {
+        guard !visited.contains(subtype) else { return nil }
+
+        let matches = cache.compactMap { $0.value.contains(subtype) ? $0.key : nil }
 
         guard let directSupertype = matches.first else {
             return nil
         }
 
+        var visited = visited
+        visited.insert(subtype)
+
         if matches.count == 1 {
-            return supertype(of: directSupertype) ?? directSupertype
+            return findSupertype(
+                of: directSupertype,
+                in: cache,
+                visited: visited
+            ) ?? directSupertype
         }
-        
-        let firstSupertype = matches.first { supertype in
-            typeInheritanceCache.keys.contains(supertype)
+
+        let firstSupertype = matches.first { type in
+            cache.keys.contains(type)
         }
-        
+
         guard let firstSupertype else { return directSupertype }
-        return supertype(of: firstSupertype) ?? firstSupertype
+
+        return findSupertype(
+            of: firstSupertype,
+            in: cache,
+            visited: visited
+        ) ?? firstSupertype
     }
     
     func put(subtype typeName: String, of type: String) {
