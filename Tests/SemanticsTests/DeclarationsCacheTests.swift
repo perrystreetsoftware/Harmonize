@@ -17,7 +17,7 @@
 //  limitations under the License.
 //
 
-@testable import HarmonizeSemantics
+import HarmonizeSemantics
 import XCTest
 
 /// Regression tests for the crash in `DeclarationsCache.supertype(of:)`.
