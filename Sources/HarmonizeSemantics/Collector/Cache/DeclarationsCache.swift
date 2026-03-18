@@ -54,6 +54,16 @@ internal class DeclarationsCache {
         let cacheCopy = locking { typeInheritanceCache }
         return findSupertype(of: subtype, in: cacheCopy, visited: [])
     }
+    
+    func put(subtype typeName: String, of type: String) {
+        locking {
+            var values = typeInheritanceCache[type, default: []]
+            if !values.contains(typeName) {
+                values.append(typeName)
+            }
+            typeInheritanceCache[type] = values
+        }
+    }
 
     private func findSupertype(
         of subtype: String,
@@ -72,36 +82,48 @@ internal class DeclarationsCache {
         visited.insert(subtype)
 
         if matches.count == 1 {
-            return findSupertype(
+            let resolved = findSupertype(
                 of: directSupertype,
                 in: cache,
                 visited: visited
-            ) ?? directSupertype
+            )
+
+            return resolvedSupertype(
+                resolved ?? directSupertype,
+                visited: visited
+            )
         }
 
         let firstSupertype = matches.first { type in
-            cache.keys.contains(type)
+            cache[type] != nil
         }
 
-        guard let firstSupertype else { return directSupertype }
+        guard let firstSupertype else {
+            return resolvedSupertype(
+                directSupertype,
+                visited: visited
+            )
+        }
 
-        return findSupertype(
+        let resolved = findSupertype(
             of: firstSupertype,
             in: cache,
             visited: visited
-        ) ?? firstSupertype
+        )
+
+        return resolvedSupertype(
+            resolved ?? firstSupertype,
+            visited: visited
+        )
     }
-    
-    func put(subtype typeName: String, of type: String) {
-        locking {
-            var values = typeInheritanceCache[type, default: []]
-            if !values.contains(typeName) {
-                values.append(typeName)
-            }
-            typeInheritanceCache[type] = values
-        }
+
+    private func resolvedSupertype(
+        _ candidate: String,
+        visited: Set<String>
+    ) -> String? {
+        visited.contains(candidate) ? nil : candidate
     }
-    
+
     private func locking<T>(f: () -> T) -> T {
         lock.lock()
         defer { lock.unlock() }

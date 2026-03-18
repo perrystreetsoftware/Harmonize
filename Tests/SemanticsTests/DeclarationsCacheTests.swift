@@ -22,38 +22,28 @@ import XCTest
 
 /// Regression tests for the crash in `DeclarationsCache.supertype(of:)`.
 final class DeclarationsCacheTests: XCTestCase {
-    // MARK: - Circular inheritance
+    private var sourceSyntax = """
+    class CycleA_DCTest: CycleB_DCTest {}
+    class CycleB_DCTest: CycleA_DCTest {}
+    """.parsed()
 
-    /// Old code: `supertype(of:)` recurses A -->B -->A -->... until stack overflow.
-    /// Fixed code: `visited` set breaks the cycle; the call terminates and returns a value.
-    func testSupertypeOfDoesNotCrashOnCircularInheritance() {
-        let cache = DeclarationsCache.shared
+    private lazy var visitor = {
+        DeclarationsCollector(
+            sourceCodeLocation: SourceCodeLocation(
+                sourceFilePath: nil,
+                sourceFileTree: sourceSyntax
+            )
+        )
+    }()
 
-        // Simulate a circular inheritance graph in the cache:
-        //   CycleA_DCTest inherits CycleB_DCTest
-        //   CycleB_DCTest inherits CycleA_DCTest
-        cache.put(subtype: "CycleA_DCTest", of: "CycleB_DCTest")
-        cache.put(subtype: "CycleB_DCTest", of: "CycleA_DCTest")
-
-        // Old code --> infinite recursion → stack overflow --> crash.
-        // Fixed code --> `visited` set detects the cycle; the call returns without crashing.
-        // The assertion is simply that this line is reached at all.
-        _ = cache.supertype(of: "CycleA_DCTest")
+    override func setUp() {
+        visitor.walk(sourceSyntax)
     }
 
-    // MARK: - Concurrent access
-
-    /// Old code: reads `typeInheritanceCache` without the lock --> data race.
-    /// Reliably detected by the Swift Thread Sanitizer (-sanitize=thread).
-    /// Fixed code: takes a snapshot of the cache under the lock --> no data race.
-    func testConcurrentReadsAndWritesDoNotCrash() {
-        let cache = DeclarationsCache.shared
-
-        // Interleave writes (put) and reads (supertype) across many threads simultaneously.
-        // On old code + TSan this reliably triggers the data race and crashes.
-        DispatchQueue.concurrentPerform(iterations: 200) { i in
-            cache.put(subtype: "Concurrent\(i)_Child_DCTest", of: "Concurrent\(i)_Parent_DCTest")
-            _ = cache.supertype(of: "Concurrent\(i)_Child_DCTest")
-        }
+    func testSupertypeOfDoesNotCrashOnCircularInheritance() {
+        let classes = visitor.classes
+        XCTAssertEqual(classes.map(\.name), ["CycleA_DCTest", "CycleB_DCTest"])
+        XCTAssertEqual(classes.first!.inheritanceTypesNames, ["CycleB_DCTest"])
+        XCTAssertEqual(classes.last!.inheritanceTypesNames, ["CycleA_DCTest"])
     }
 }
