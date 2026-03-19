@@ -45,5 +45,9 @@ final class DeclarationsCacheTests: XCTestCase {
         XCTAssertEqual(classes.map(\.name), ["CycleA_DCTest", "CycleB_DCTest"])
         XCTAssertEqual(classes.first!.inheritanceTypesNames, ["CycleB_DCTest"])
         XCTAssertEqual(classes.last!.inheritanceTypesNames, ["CycleA_DCTest"])
+
+        // Exercise DeclarationsCache.supertype(of:) via transitive inheritance lookup on the circular hierarchy.
+        _ = classes.first?.inherits(from: "CycleB_DCTest", includeTransitiveInheritance: true)
+        _ = classes.last?.inherits(from: "CycleA_DCTest", includeTransitiveInheritance: true)
     }
 }
