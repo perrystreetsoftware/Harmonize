@@ -32,7 +32,8 @@ internal final class ResolveProjectWorkingDirectory {
         }
         
         var startingDirectory = URL(fileURLWithPath: currentFile)
-        
+        let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.standardized.path
+
         repeat {
             startingDirectory.appendPathComponent("..")
             startingDirectory.standardize()
@@ -41,11 +42,18 @@ internal final class ResolveProjectWorkingDirectory {
                 if !configFileIsReadable(at: startingDirectory) {
                     throw Config.FileError.noPermissionToViewFile
                 }
-                
+
                 return startingDirectory
             }
+
+            // Don't walk above the user's home directory: a stray `.harmonize.yaml`
+            // in an ancestor would otherwise hijack the project root and trigger a
+            // recursive scan of unrelated directories.
+            if startingDirectory.path == homeDirectory {
+                throw Config.FileError.configFileNotFound
+            }
         } while startingDirectory.path != "/"
-        
+
         throw Config.FileError.configFileNotFound
     }
     
