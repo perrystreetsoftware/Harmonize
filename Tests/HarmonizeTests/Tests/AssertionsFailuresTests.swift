@@ -53,6 +53,30 @@ final class AssertionsFailuresTests: XCTestCase {
     func testAssertCountFailsBecauseCollectionIsEmpty() throws {
         [Class]().assertCount(count: 3)
     }
+
+    func testAssertTrueWithBaselineFailsBecauseBaselineEntryIsStale() throws {
+        // FetchUserUseCase is in the baseline but it passes the condition,
+        // which means it's a stale baseline entry and should be reported.
+        productionCode.classes().assertTrue(baseline: ["FetchUserUseCase"]) { _ in
+            true
+        }
+    }
+
+    func testAssertFalseWithBaselineFailsBecauseBaselineEntryIsStale() throws {
+        // UserConverter is in the baseline but it returns false from the condition,
+        // which means it's a stale baseline entry and should be reported.
+        productionCode.classes().assertFalse(baseline: ["UserConverter"]) { _ in
+            false
+        }
+    }
+
+    func testAssertEmptyWithBaselineFailsBecauseNonBaselinedElementIsPresent() throws {
+        // UserConverter is not in the baseline so it is not excluded from the empty check,
+        // causing the assertion to fail.
+        productionCode.classes()
+            .filter { !$0.name.starts(with: "Fetch") }
+            .assertEmpty(baseline: ["UserRepository"])
+    }
 }
 
 internal extension AssertionsFailuresTests {

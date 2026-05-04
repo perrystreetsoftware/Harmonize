@@ -41,8 +41,8 @@ final class HarmonizeTests: XCTestCase {
         let fileNames = scope.sources().map { $0.fileName }
         let edgeCases = ["MathTests.swift", "UseCases.swift", "ModelsTests.swift"]
         
-        XCTAssertEqual(scope.sources().count, 5)
-        
+        XCTAssertEqual(scope.sources().count, 6)
+
         for edgeCase in edgeCases {
             XCTAssert(fileNames.contains(edgeCase), "\(edgeCase) not found in \(fileNames)")
         }
@@ -54,8 +54,8 @@ final class HarmonizeTests: XCTestCase {
         
         let fileNames = scope.sources().map { $0.fileName }
         
-        XCTAssertEqual(scope.sources().count, 2)
-        
+        XCTAssertEqual(scope.sources().count, 3)
+
         for excluded in ["MathTests.swift", "UseCases.swift", "ModelsTests.swift"] {
             XCTAssert(!fileNames.contains(excluded), "\(excluded) found in \(fileNames)")
         }
@@ -65,7 +65,7 @@ final class HarmonizeTests: XCTestCase {
         let scope = productionAndTestCode.excluding("Tests")
         let fileNames = scope.sources().map { $0.fileName }
         
-        XCTAssertEqual(scope.sources().count, 2)
+        XCTAssertEqual(scope.sources().count, 3)
         
         for excluded in ["MathTests.swift", "UseCasesTests.swift", "ModelsTests.swift"] {
             XCTAssert(!fileNames.contains(excluded), "\(excluded) found in \(fileNames)")
