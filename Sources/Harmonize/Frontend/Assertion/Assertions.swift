@@ -89,8 +89,10 @@ public extension Array where Element: SyntaxNodeProviding {
             line: line,
             column: column
         )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
-    
+
     /// Asserts that the specified condition is false for all elements in the array while also reporting found issues in the
     /// original source code location, if possible.
     ///
@@ -151,6 +153,8 @@ public extension Array where Element: SyntaxNodeProviding {
             line: line,
             column: column
         )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
     
     /// Asserts that the array is empty.
@@ -174,7 +178,10 @@ public extension Array where Element: SyntaxNodeProviding {
     ) {
         let nonBaselineElements = filter { !isInBaseline($0, baseline: baseline) }
 
-        guard !nonBaselineElements.isEmpty else { return }
+        guard !nonBaselineElements.isEmpty else {
+            reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
+            return
+        }
 
         report(
             elements: nonBaselineElements,
@@ -185,6 +192,8 @@ public extension Array where Element: SyntaxNodeProviding {
             line: line,
             column: column
         )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
     
     /// Asserts that the array is not empty.
@@ -292,6 +301,25 @@ public extension Array where Element: SyntaxNodeProviding {
             return true
         }
         return false
+    }
+
+    private func reportUnmatchedBaselineEntries(
+        baseline: [String],
+        fileID: StaticString,
+        file: StaticString,
+        line: UInt,
+        column: UInt
+    ) {
+        let unmatched = baseline.filter { entry in !contains { isInBaseline($0, baseline: [entry]) } }
+        guard !unmatched.isEmpty else { return }
+        let list = unmatched.map { "'\($0)'" }.joined(separator: ", ")
+        reportInline(
+            message: "Stale baseline: \(unmatched.count) entry/entries no longer match any element and should be removed: \(list)",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
 
     private func report(
