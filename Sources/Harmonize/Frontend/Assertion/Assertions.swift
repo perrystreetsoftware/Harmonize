@@ -35,6 +35,8 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - parameters:
     ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
+    ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
+    ///     are expected to *fail* the condition; if they pass, a "stale baseline" error is reported so the entry can be removed.
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
@@ -44,6 +46,7 @@ public extension Array where Element: SyntaxNodeProviding {
     func assertTrue(
         message: String? = nil,
         strict: Bool = false,
+        baseline: [String] = [],
         fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
@@ -60,26 +63,44 @@ public extension Array where Element: SyntaxNodeProviding {
             )
             return
         }
-        
-        let matchingElements = filter { !condition($0) }
-        
+
+        let normalElements = filter { !isInBaseline($0, baseline: baseline) }
+        let failingNormalElements = normalElements.filter { !condition($0) }
+
         report(
-            elements: matchingElements,
-            assertionMessage: "Expected true but was false on \(matchingElements.count) elements.",
+            elements: failingNormalElements,
+            assertionMessage: "Expected true but was false on \(failingNormalElements.count) elements.",
             additionalMessage: message,
             fileID: fileID,
             file: file,
             line: line,
             column: column
         )
+
+        let baselineElements = filter { isInBaseline($0, baseline: baseline) }
+        let staleElements = baselineElements.filter { condition($0) }
+
+        report(
+            elements: staleElements,
+            assertionMessage: "Stale baseline: \(staleElements.count) element(s) now pass and should be removed from the baseline.",
+            additionalMessage: "Stale baseline entry — this element now passes and should be removed from the baseline.",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
-    
+
     /// Asserts that the specified condition is false for all elements in the array while also reporting found issues in the
     /// original source code location, if possible.
     ///
     /// - parameters:
     ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
+    ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
+    ///     are expected to *pass* the condition (i.e. return true); if they return false, a "stale baseline" error is reported.
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
@@ -89,6 +110,7 @@ public extension Array where Element: SyntaxNodeProviding {
     func assertFalse(
         message: String? = nil,
         strict: Bool = false,
+        baseline: [String] = [],
         fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
@@ -105,25 +127,42 @@ public extension Array where Element: SyntaxNodeProviding {
             )
             return
         }
-        
-        let matchingElements = filter { condition($0) }
-        
+
+        let normalElements = filter { !isInBaseline($0, baseline: baseline) }
+        let matchingNormalElements = normalElements.filter { condition($0) }
+
         report(
-            elements: matchingElements,
-            assertionMessage: "Expected false but was true on \(matchingElements.count) elements.",
+            elements: matchingNormalElements,
+            assertionMessage: "Expected false but was true on \(matchingNormalElements.count) elements.",
             additionalMessage: message,
             fileID: fileID,
             file: file,
             line: line,
             column: column
         )
+
+        let baselineElements = filter { isInBaseline($0, baseline: baseline) }
+        let staleElements = baselineElements.filter { !condition($0) }
+
+        report(
+            elements: staleElements,
+            assertionMessage: "Stale baseline: \(staleElements.count) element(s) now fail and should be removed from the baseline.",
+            additionalMessage: "Stale baseline entry — this element now fails and should be removed from the baseline.",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
     
     /// Asserts that the array is empty.
     ///
     /// - parameters:
     ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
-    ///   - showErrorAtSource: Flag to indicate if the assertion should show the error in the original source code.
+    ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
+    ///     are expected to be present and are excluded from the empty check.
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
@@ -131,22 +170,30 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - warning: This method is experimental and subject to change.
     func assertEmpty(
         message: String? = nil,
+        baseline: [String] = [],
         fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
         column: UInt = #column
     ) {
-        guard !isEmpty else { return }
-        
+        let nonBaselineElements = filter { !isInBaseline($0, baseline: baseline) }
+
+        guard !nonBaselineElements.isEmpty else {
+            reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
+            return
+        }
+
         report(
-            elements: self,
-            assertionMessage: "Expected empty collection got \(count) elements instead.",
+            elements: nonBaselineElements,
+            assertionMessage: "Expected empty collection got \(nonBaselineElements.count) elements instead.",
             additionalMessage: message,
             fileID: fileID,
             file: file,
             line: line,
             column: column
         )
+
+        reportUnmatchedBaselineEntries(baseline: baseline, fileID: fileID, file: file, line: line, column: column)
     }
     
     /// Asserts that the array is not empty.
@@ -244,6 +291,37 @@ public extension Array where Element: SyntaxNodeProviding {
         }
     }
     
+    private func isInBaseline(_ element: Element, baseline: [String]) -> Bool {
+        if let named = element as? NamedDeclaration, baseline.contains(named.name) {
+            return true
+        }
+        if let sourceProvider = element as? SourceCodeProviding,
+           let fileName = sourceProvider.sourceCodeLocation.sourceFilePath?.lastPathComponent,
+           baseline.contains(fileName) {
+            return true
+        }
+        return false
+    }
+
+    private func reportUnmatchedBaselineEntries(
+        baseline: [String],
+        fileID: StaticString,
+        file: StaticString,
+        line: UInt,
+        column: UInt
+    ) {
+        let unmatched = baseline.filter { entry in !contains { isInBaseline($0, baseline: [entry]) } }
+        guard !unmatched.isEmpty else { return }
+        let list = unmatched.map { "'\($0)'" }.joined(separator: ", ")
+        reportInline(
+            message: "Stale baseline: \(unmatched.count) entry/entries no longer match any element and should be removed: \(list)",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
+    }
+
     private func report(
         elements: [Element],
         assertionMessage: String,
