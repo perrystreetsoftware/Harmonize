@@ -37,7 +37,7 @@ public extension Array where Element: SwiftSourceCode {
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
-    ///   - column: The line number to which the assertion should be attributed.
+    ///   - column: The column number to which the assertion should be attributed.
     ///   - condition: The test condition assertion.
     ///
     func assertTrue(
@@ -100,7 +100,7 @@ public extension Array where Element: SwiftSourceCode {
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
-    ///   - column: The line number to which the assertion should be attributed.
+    ///   - column: The column number to which the assertion should be attributed.
     ///   - condition: A closure that takes an element and returns a `Bool` indicating if the condition is met.
     ///
     func assertFalse(
@@ -162,7 +162,7 @@ public extension Array where Element: SwiftSourceCode {
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
-    ///   - column: The line number to which the assertion should be attributed.
+    ///   - column: The column number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertEmpty(
         message: String? = nil,
@@ -198,7 +198,7 @@ public extension Array where Element: SwiftSourceCode {
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
-    ///   - column: The line number to which the assertion should be attributed.
+    ///   - column: The column number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertNotEmpty(
         fileID: StaticString = #fileID,
@@ -243,7 +243,7 @@ public extension Array where Element: SwiftSourceCode {
     ///   - fileID: The file ID to which the assertion should be attributed.
     ///   - file: The file path to which the assertion should be attributed.
     ///   - line: The line number to which the assertion should be attributed.
-    ///   - column: The line number to which the assertion should be attributed.
+    ///   - column: The column number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertCount(
         count: Int,
