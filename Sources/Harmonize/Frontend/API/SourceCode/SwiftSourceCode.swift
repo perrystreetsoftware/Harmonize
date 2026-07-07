@@ -36,8 +36,10 @@ public final class SwiftSourceCode {
             return cached
         }
         
-        // Create new resolver and cache it
-        let newResolver = SourceFileSyntaxResolver(source: self, node: foldedSourceFileSyntax ?? sourceFileSyntax)
+        // Create new resolver and cache it.
+        // The raw parse is enough: the few APIs that need folded operator
+        // sequences (infix expressions, comparisons) fold at the point of use.
+        let newResolver = SourceFileSyntaxResolver(source: self, node: sourceFileSyntax)
         SwiftSourceCode.resolverCache[cacheKey] = newResolver
         return newResolver
     }()
@@ -178,10 +180,6 @@ extension SwiftSourceCode: Equatable, Hashable  {
 internal extension SwiftSourceCode {
     var sourceFileSyntax: SourceFileSyntax {
         syntaxTreeCache.get(self)
-    }
-    
-    var foldedSourceFileSyntax: SourceFileSyntax? {
-        foldedSyntaxTreeCache.get(self)
     }
 }
 

@@ -100,7 +100,7 @@ public struct Body: DeclarationDecoration, SyntaxNodeProviding {
         for child in node {
             statements.append(Statement(node: child))
 
-            if let infixOperator = child.item.as(InfixOperatorExprSyntax.self) {
+            if let infixOperator = SyntaxFolding.infixOperator(from: child.item) {
                 infixExpressions.append(InfixExpression(node: infixOperator))
                 continue
             }

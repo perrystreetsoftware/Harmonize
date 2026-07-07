@@ -20,7 +20,6 @@
 import Foundation
 import SwiftSyntax
 import SwiftParser
-import SwiftOperators
 import HarmonizeUtils
 
 /*
@@ -66,10 +65,4 @@ internal class SyntaxSourceCache<Syntax> {
 
 internal let syntaxTreeCache = SyntaxSourceCache {
     Parser.parse(source: $0.source)
-}
-
-internal let foldedSyntaxTreeCache = SyntaxSourceCache { source -> SourceFileSyntax? in
-    OperatorTable.standardOperators
-        .foldAll(source.sourceFileSyntax) { _ in /* no-op */ }
-        .as(SourceFileSyntax.self)
 }

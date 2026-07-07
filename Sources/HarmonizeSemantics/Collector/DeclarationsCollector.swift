@@ -66,12 +66,17 @@ package final class DeclarationsCollector: SyntaxVisitor {
     }
     
     private let declarationsCache = DeclarationsCache.shared
-    
+
     // The current visiting stack<->declaration.
     private var stack: [(Syntax, Declaration)] = []
-    
+
     // The map of nodes and its child declarations.
+    // Owned by this collector while walking; merged into the shared cache
+    // in a single lock acquisition when the source file's walk completes.
     private var nodes: [Syntax: [Declaration]] = [:]
+
+    // Inheritance edges collected during the walk, flushed alongside `nodes`.
+    private var inheritanceEdges: [(subtype: String, supertype: String)] = []
 
     private var parentDeclaration: Declaration? {
         stack.last?.1
@@ -225,14 +230,21 @@ package final class DeclarationsCollector: SyntaxVisitor {
         return single
     }
     
+    public override func visitPost(_ node: SourceFileSyntax) {
+        declarationsCache.merge(
+            nodesAndDeclarations: nodes,
+            inheritanceEdges: inheritanceEdges
+        )
+        inheritanceEdges.removeAll()
+    }
+
     private func endScope(for node: SyntaxProtocol) {
-        declarationsCache.put(children: nodes[node._syntaxNode, default: []], for: node)
         _ = stack.popLast()
     }
-    
+
     private func cacheDeclarationSupertype(declaration: NamedDeclaration & InheritanceProviding) {
         declaration.inheritanceTypesNames.forEach {
-            declarationsCache.put(subtype: declaration.name, of: $0)
+            inheritanceEdges.append((subtype: declaration.name, supertype: $0))
         }
     }
 }

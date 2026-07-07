@@ -21,8 +21,8 @@ import Foundation
 
 /// The internal implementation responsible for Swift File lookup through the source.
 internal final class GetFiles {
-    private let workingDirectory: URL
-    private let config: Config
+    internal let workingDirectory: URL
+    internal let config: Config
 
     init(_ file: StaticString) {
         do {
@@ -54,7 +54,7 @@ internal final class GetFiles {
             var isDirectory: ObjCBool = false
             
             let pathExistsAndIsDirectory = FileManager.default.fileExists(
-                atPath: url.absoluteString,
+                atPath: url.path,
                 isDirectory: &isDirectory
             ) && isDirectory.boolValue
             

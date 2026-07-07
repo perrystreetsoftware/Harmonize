@@ -32,7 +32,8 @@ let package = Package(
             name: "HarmonizeSemantics",
             dependencies: [
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftParser", package: "swift-syntax")
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftOperators", package: "swift-syntax")
             ]
         ),
         .target(name: "HarmonizeUtils"),

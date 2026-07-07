@@ -24,55 +24,87 @@ internal class DeclarationsCache {
     private let lock = NSLock()
 
     internal static let shared = DeclarationsCache()
-    
+
     private var nodesAndDeclarations: [Syntax: [Declaration]] = [:]
-    private var resolved: [Syntax: Declaration] = [:]
-    
+
+    /// Maps a type name to the names it directly inherits from or conforms to.
     private var typeInheritanceCache: [String: [String]] = [:]
-    
+
+    /// Reverse index of `typeInheritanceCache`: maps a subtype to its direct
+    /// supertypes, so `supertype(of:)` resolves by dictionary lookup instead
+    /// of scanning every entry.
+    private var supertypesBySubtype: [String: [String]] = [:]
+
     private init() {}
-    
+
     func declarations(from parent: SyntaxProtocol) -> [Declaration] {
         locking {
             nodesAndDeclarations[parent._syntaxNode, default: []]
         }
     }
-    
+
     func put(children declarations: [Declaration], for parent: SyntaxProtocol) {
         locking {
             nodesAndDeclarations[parent._syntaxNode] = declarations
         }
     }
-    
+
+    /// Merges one file's worth of collected declarations and inheritance edges
+    /// in a single lock acquisition, so concurrent collectors contend once per
+    /// file instead of once per declaration.
+    func merge(
+        nodesAndDeclarations fileNodes: [Syntax: [Declaration]],
+        inheritanceEdges: [(subtype: String, supertype: String)]
+    ) {
+        locking {
+            nodesAndDeclarations.merge(fileNodes) { _, new in new }
+            for edge in inheritanceEdges {
+                unsafePut(subtype: edge.subtype, of: edge.supertype)
+            }
+        }
+    }
+
     func inheritedTypes(of type: String) -> [String] {
         locking {
             typeInheritanceCache[type, default: []]
         }
     }
-    
+
     func supertype(of subtype: String) -> String? {
-        let cacheCopy = locking { typeInheritanceCache }
-        return findSupertype(of: subtype, in: cacheCopy, visited: [])
-    }
-    
-    func put(subtype typeName: String, of type: String) {
         locking {
-            var values = typeInheritanceCache[type, default: []]
-            if !values.contains(typeName) {
-                values.append(typeName)
-            }
-            typeInheritanceCache[type] = values
+            findSupertype(of: subtype, visited: [])
         }
     }
 
+    func put(subtype typeName: String, of type: String) {
+        locking {
+            unsafePut(subtype: typeName, of: type)
+        }
+    }
+
+    /// Must be called while holding `lock`.
+    private func unsafePut(subtype typeName: String, of type: String) {
+        var values = typeInheritanceCache[type, default: []]
+        if !values.contains(typeName) {
+            values.append(typeName)
+        }
+        typeInheritanceCache[type] = values
+
+        var supertypes = supertypesBySubtype[typeName, default: []]
+        if !supertypes.contains(type) {
+            supertypes.append(type)
+        }
+        supertypesBySubtype[typeName] = supertypes
+    }
+
+    /// Must be called while holding `lock`.
     private func findSupertype(
         of subtype: String,
-        in cache: [String: [String]],
         visited: Set<String>
     ) -> String? {
         guard !visited.contains(subtype) else { return nil }
 
-        let matches = cache.compactMap { $0.value.contains(subtype) ? $0.key : nil }
+        let matches = supertypesBySubtype[subtype, default: []]
 
         guard let directSupertype = matches.first else {
             return nil
@@ -84,7 +116,6 @@ internal class DeclarationsCache {
         if matches.count == 1 {
             let resolved = findSupertype(
                 of: directSupertype,
-                in: cache,
                 visited: visited
             )
 
@@ -95,7 +126,7 @@ internal class DeclarationsCache {
         }
 
         let firstSupertype = matches.first { type in
-            cache[type] != nil
+            typeInheritanceCache[type] != nil
         }
 
         guard let firstSupertype else {
@@ -107,7 +138,6 @@ internal class DeclarationsCache {
 
         let resolved = findSupertype(
             of: firstSupertype,
-            in: cache,
             visited: visited
         )
 

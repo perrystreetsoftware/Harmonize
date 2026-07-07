@@ -29,7 +29,7 @@ public struct Condition: DeclarationDecoration, SyntaxNodeProviding {
     public var value: Value {
         return if let optionalBinding = node.condition.as(OptionalBindingConditionSyntax.self) {
             .optionalBinding(.init(node: optionalBinding))
-        } else if let comparison = node.condition.as(InfixOperatorExprSyntax.self) {
+        } else if let comparison = SyntaxFolding.infixOperator(from: node.condition) {
             .comparison(.init(node: comparison))
         } else if let booleanExpression = node.condition.as(MemberAccessExprSyntax.self) {
             .booleanExpression(booleanExpression.trimmedDescription)

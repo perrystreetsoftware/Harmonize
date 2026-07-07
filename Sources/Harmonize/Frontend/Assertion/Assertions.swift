@@ -20,11 +20,6 @@
 import Foundation
 import HarmonizeSemantics
 import SwiftSyntax
-import XCTest
-
-#if canImport(Testing)
-  import Testing
-#endif
 
 /// An experimental extension providing assertions API for `Array` where `Element` conforms to `SyntaxNodeProviding`.
 /// These utilities enable behavior-driven assertions on the elements of the array, such as checking conditions, count, and emptiness.
@@ -45,6 +40,7 @@ public extension Array where Element: SyntaxNodeProviding {
     ///
     func assertTrue(
         message: String? = nil,
+        rule: Rule? = nil,
         strict: Bool = false,
         baseline: [String] = [],
         fileID: StaticString = #fileID,
@@ -71,6 +67,7 @@ public extension Array where Element: SyntaxNodeProviding {
             elements: failingNormalElements,
             assertionMessage: "Expected true but was false on \(failingNormalElements.count) elements.",
             additionalMessage: message,
+            rule: rule,
             fileID: fileID,
             file: file,
             line: line,
@@ -109,6 +106,7 @@ public extension Array where Element: SyntaxNodeProviding {
     ///
     func assertFalse(
         message: String? = nil,
+        rule: Rule? = nil,
         strict: Bool = false,
         baseline: [String] = [],
         fileID: StaticString = #fileID,
@@ -135,6 +133,7 @@ public extension Array where Element: SyntaxNodeProviding {
             elements: matchingNormalElements,
             assertionMessage: "Expected false but was true on \(matchingNormalElements.count) elements.",
             additionalMessage: message,
+            rule: rule,
             fileID: fileID,
             file: file,
             line: line,
@@ -170,6 +169,7 @@ public extension Array where Element: SyntaxNodeProviding {
     /// - warning: This method is experimental and subject to change.
     func assertEmpty(
         message: String? = nil,
+        rule: Rule? = nil,
         baseline: [String] = [],
         fileID: StaticString = #fileID,
         file: StaticString = #filePath,
@@ -187,6 +187,7 @@ public extension Array where Element: SyntaxNodeProviding {
             elements: nonBaselineElements,
             assertionMessage: "Expected empty collection got \(nonBaselineElements.count) elements instead.",
             additionalMessage: message,
+            rule: rule,
             fileID: fileID,
             file: file,
             line: line,
@@ -211,33 +212,14 @@ public extension Array where Element: SyntaxNodeProviding {
         column: UInt = #column
     ) {
         guard isEmpty else { return }
-        
-        let message = "Expected non empty collection got empty instead."
-        
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: message),
-                sourceLocation: .init(
-                    fileID: fileID.description,
-                    filePath: file.description,
-                    line: Int(line),
-                    column: Int(column))
-            )
-            #else
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-            #endif
-        } else {
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-        }
+
+        reportInline(
+            message: "Expected non empty collection got empty instead.",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
     
     /// Asserts that the array has the specified number of elements.
@@ -263,32 +245,13 @@ public extension Array where Element: SyntaxNodeProviding {
             return
         }
         
-        let message = "Expected count to be \(count) got \(self.count)."
-        
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: message),
-                sourceLocation: .init(
-                    fileID: fileID.description,
-                    filePath: file.description,
-                    line: Int(line),
-                    column: Int(column))
-            )
-            #else
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-            #endif
-        } else {
-            XCTFail(
-                message,
-                file: file,
-                line: line
-            )
-        }
+        reportInline(
+            message: "Expected count to be \(count) got \(self.count).",
+            fileID: fileID,
+            file: file,
+            line: line,
+            column: column
+        )
     }
     
     private func isInBaseline(_ element: Element, baseline: [String]) -> Bool {
@@ -326,38 +289,40 @@ public extension Array where Element: SyntaxNodeProviding {
         elements: [Element],
         assertionMessage: String,
         additionalMessage: String? = nil,
+        rule: Rule? = nil,
         fileID: StaticString = #fileID,
         file: StaticString = #filePath,
         line: UInt = #line,
         column: UInt = #column
     ) {
+        guard elements.isNotEmpty else { return }
+
+        let message = additionalMessage ?? rule?.rationale
         var codeIssues: [CodeIssue] = []
-        
+
         for element in elements {
-            if let issue = element.toCodeIssue(message: additionalMessage) {
+            if let issue = element.toCodeIssue(message: message) {
                 codeIssues.append(issue)
             }
         }
-                
+
         let loggableViolations = codeIssues.map {
             "(\($0.fileId))\n\($0.name):\($0.line):\($0.column)"
         }.joined(separator: "\n\n")
-        
-        let testName = additionalMessage ?? assertionMessage
-        let inlineMessage = """
+
+        let testName = message ?? assertionMessage
+        let summary = """
         \(testName)
-            
+
         \(elements.count) issues were found:
-            
+
         \(loggableViolations)
         """
-        
-        reportIssues(codeIssues)
-        
-        guard elements.isNotEmpty else { return }
-        
-        reportInline(
-            message: inlineMessage,
+
+        reportViolations(
+            codeIssues,
+            summary: summary,
+            rule: rule,
             fileID: fileID,
             file: file,
             line: line,

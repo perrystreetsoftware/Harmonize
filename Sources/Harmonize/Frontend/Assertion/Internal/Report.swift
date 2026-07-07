@@ -18,48 +18,26 @@
 //
 
 import Foundation
-import XCTest
 
-#if canImport(Testing)
-import Testing
-#endif
-
-internal var isRunningSwiftTesting: Bool {
-    #if canImport(Testing)
-    return Test.current != nil
-    #else
-    return false
-    #endif
+/// Delivers one assertion's violations plus its aggregate summary to the
+/// active ``Reporter``.
+internal func reportViolations(
+    _ issues: [CodeIssue],
+    summary: String,
+    rule: Rule?,
+    fileID: StaticString,
+    file: StaticString,
+    line: UInt,
+    column: UInt
+) {
+    HarmonizeReporting.reporter.report(
+        violations: issues.map { $0.toViolation(rule: rule) },
+        summary: summary,
+        at: assertionLocation(fileID: fileID, file: file, line: line, column: column)
+    )
 }
 
-internal func reportIssues(_ issues: [CodeIssue]) {
-    func useXCT(issue: CodeIssue) {
-        issue.filePath.relativePath.withStaticString {
-            XCTFail(issue.message, file: $0, line: UInt(issue.line))
-        }
-    }
-    
-    issues.forEach { issue in
-        if isRunningSwiftTesting {
-            #if canImport(Testing)
-            Issue.record(
-                .init(rawValue: issue.message),
-                sourceLocation: SourceLocation(
-                    fileID: issue.fileId,
-                    filePath: issue.filePath.relativePath,
-                    line: issue.line,
-                    column: issue.column
-                )
-            )
-            #else
-            useXCT(issue: issue)
-            #endif
-        } else {
-            useXCT(issue: issue)
-        }
-    }
-}
-
+/// Delivers a standalone failure at the assertion call site to the active ``Reporter``.
 internal func reportInline(
     message: String,
     fileID: StaticString = #fileID,
@@ -67,21 +45,36 @@ internal func reportInline(
     line: UInt = #line,
     column: UInt = #column
 ) {
-    if isRunningSwiftTesting {
-        #if canImport(Testing)
-        Issue.record(
-            .init(rawValue: message),
-            sourceLocation: SourceLocation(
-                fileID: fileID.description,
-                filePath: file.description,
-                line: Int(line),
-                column: Int(column)
-            )
+    HarmonizeReporting.reporter.report(
+        failure: message,
+        at: assertionLocation(fileID: fileID, file: file, line: line, column: column)
+    )
+}
+
+private func assertionLocation(
+    fileID: StaticString,
+    file: StaticString,
+    line: UInt,
+    column: UInt
+) -> AssertionLocation {
+    AssertionLocation(
+        fileID: fileID.description,
+        filePath: file.description,
+        line: Int(line),
+        column: Int(column)
+    )
+}
+
+internal extension CodeIssue {
+    func toViolation(rule: Rule?) -> Violation {
+        Violation(
+            name: name,
+            message: message,
+            filePath: filePath,
+            line: line,
+            column: column,
+            fileID: fileId,
+            rule: rule
         )
-        #else
-        XCTFail(message, file: file, line: line)
-        #endif
-    } else {
-        XCTFail(message, file: file, line: line)
     }
 }
