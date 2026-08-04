@@ -22,7 +22,6 @@ import SwiftSyntax
 import SwiftParser
 import HarmonizeSemantics
 import HarmonizeUtils
-import XCTest
 
 /// Represents a source of Swift code, which can either be loaded from a URL or provided as a raw string.
 /// This class offers lazy loading of the source text, resolving it from either the provided URL or raw string.
@@ -46,28 +45,35 @@ public final class SwiftSourceCode {
 
     /// The URL pointing to the Swift source file, if provided. Nil if `source` is provided directly as string.
     private let url: URL?
-    
+
+    /// Whether `url` refers to a file read from disk, instead of a path given to plain source.
+    private let isFileBacked: Bool
+
     /// Unique identifier for this Source.
     public let id: UUID = UUID()
-    
+
     /// Returns the Swift source code as a string. This returns either the URL or using the raw string, depending on which was initialized.
     public let source: String
-    
+
     /// Cache key for syntax caching. Uses file path for file-based sources,
     /// or a hash of the source content for in-memory sources.
+    ///
+    /// Plain sources key on content even when they carry a path, since two different
+    /// snippets may be given the same file name.
     internal lazy var cacheKey: String = {
-        if let url = url {
+        if isFileBacked, let url = url {
             return url.absoluteString
         }
         return "source:\(source.hashValue)"
     }()
-    
+
     /// Initializes the `SwiftSourceCode` with a URL pointing to a Swift source file.
     ///
     /// - parameter url: The file URL to the Swift source code.
     public init?(url: URL) {
         guard let source = try? String(contentsOf: url, encoding: .utf8) else { return nil }
         self.url = url
+        self.isFileBacked = true
         self.source = source
     }
 
@@ -76,6 +82,21 @@ public final class SwiftSourceCode {
     /// - parameter source: A string containing Swift source code.
     public init(source: String) {
         self.url = nil
+        self.isFileBacked = false
+        self.source = source
+    }
+
+    /// Initializes the `SwiftSourceCode` with a raw Swift source code string and a file path.
+    ///
+    /// Violations are only reported when they can be attributed to a file, so assertions over
+    /// files report nothing against a source that has none.
+    ///
+    /// - parameters:
+    ///   - source: A string containing Swift source code.
+    ///   - path: The path given to the source. No file needs to exist there.
+    internal init(source: String, path: URL) {
+        self.url = path
+        self.isFileBacked = false
         self.source = source
     }
     

@@ -48,3 +48,9 @@ Package.pins
 # Carthage/Checkouts
 
 Carthage/Build/
+
+# Harmonize test scratch directory (see RuleSetContextTests)
+.harmonize-generated-tests/
+
+# Local design notes, not tracked
+.design/

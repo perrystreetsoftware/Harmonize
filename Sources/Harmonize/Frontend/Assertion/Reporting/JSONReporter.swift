@@ -50,7 +50,9 @@ public final class JSONReporter: Reporter {
         public let line: Int
         public let column: Int
         public let message: String
-        public let fixHint: String?
+        public let summary: String?
+        public let howToFix: String?
+        public let goodExample: String?
     }
 
     private let lock = NSLock()
@@ -92,7 +94,9 @@ public final class JSONReporter: Reporter {
                 line: violation.line,
                 column: violation.column,
                 message: violation.message,
-                fixHint: violation.rule?.fixHint
+                summary: violation.rule?.summary,
+                howToFix: violation.rule?.howToFix,
+                goodExample: violation.rule?.examples?.goodExample
             )
         })
 
@@ -114,7 +118,9 @@ public final class JSONReporter: Reporter {
                 line: location.line,
                 column: location.column,
                 message: message,
-                fixHint: nil
+                summary: nil,
+                howToFix: nil,
+                goodExample: nil
             )
         ])
     }

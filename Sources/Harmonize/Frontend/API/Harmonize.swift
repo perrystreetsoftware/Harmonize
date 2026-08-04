@@ -77,4 +77,19 @@ public struct Harmonize {
     public static func on(source: String) -> HarmonizeScope {
         PlainSourceScopeBuilder(source: source)
     }
+
+    /// Creates a `HarmonizeScope` using the provided Swift source as string, reporting as if
+    /// it came from a file at `path`.
+    ///
+    /// Violations are only reported when they can be attributed to a file, so assertions over
+    /// files report nothing against a source that has none. Rules matching on a directory need
+    /// the path to contain it, e.g. `"Sources/Screens/ProfileScreen.swift"`.
+    ///
+    /// - parameters:
+    ///   - source: The source code as a `String`.
+    ///   - path: The path given to the source. No file needs to exist there.
+    /// - returns: ``HarmonizeScope`` built from the provided source.
+    public static func on(source: String, path: String) -> HarmonizeScope {
+        PlainSourceScopeBuilder(source: source, path: path)
+    }
 }

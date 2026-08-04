@@ -297,7 +297,9 @@ public extension Array where Element: SyntaxNodeProviding {
     ) {
         guard elements.isNotEmpty else { return }
 
-        let message = additionalMessage ?? rule?.rationale
+        // Assertions within a `Rule` check inherit its metadata. A passed rule wins.
+        let rule = rule ?? RuleContext.current
+        let message = additionalMessage ?? rule?.formatted
         var codeIssues: [CodeIssue] = []
 
         for element in elements {

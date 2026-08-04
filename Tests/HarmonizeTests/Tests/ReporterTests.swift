@@ -51,9 +51,10 @@ final class ReporterTests: XCTestCase {
     func testJSONReporterCollectsViolationsWithRuleMetadata() throws {
         let rule = Rule(
             id: "viewmodels-inherit-base",
+            summary: "Every ViewModel must inherit from BaseViewModel.",
             severity: .error,
-            rationale: "ViewModels must inherit BaseViewModel.",
-            fixHint: "Declare the class as `final class BadViewModel: BaseViewModel`."
+            why: "BaseViewModel owns subscription cancellation.",
+            howToFix: "Declare the class as `final class BadViewModel: BaseViewModel`."
         )
 
         let reporter = JSONReporter()
@@ -69,8 +70,10 @@ final class ReporterTests: XCTestCase {
         XCTAssertEqual(entry.name, "BadViewModel")
         XCTAssertEqual(entry.file, fileURL.relativePath)
         XCTAssertEqual(entry.line, 3)
-        XCTAssertEqual(entry.message, "ViewModels must inherit BaseViewModel.")
-        XCTAssertEqual(entry.fixHint, "Declare the class as `final class BadViewModel: BaseViewModel`.")
+        XCTAssertEqual(entry.summary, "Every ViewModel must inherit from BaseViewModel.")
+        XCTAssertEqual(entry.howToFix, "Declare the class as `final class BadViewModel: BaseViewModel`.")
+        XCTAssertEqual(entry.message, rule.formatted)
+        XCTAssertTrue(entry.message.contains("BaseViewModel owns subscription cancellation."))
     }
 
     func testExplicitMessageWinsOverRationale() throws {
@@ -78,7 +81,7 @@ final class ReporterTests: XCTestCase {
         HarmonizeReporting.withReporter(reporter) {
             source.classes().assertTrue(
                 message: "Custom message.",
-                rule: Rule(id: "some-rule", rationale: "Rationale.")
+                rule: Rule(id: "some-rule", why: "Rationale.")
             ) { _ in false }
         }
 

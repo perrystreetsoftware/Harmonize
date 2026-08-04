@@ -17,14 +17,19 @@
 //  limitations under the License.
 //
 
+import Foundation
 import HarmonizeSemantics
 
 /// The Harmonize scope builder implementation that parses plain source code over `.swift` files.
 internal class PlainSourceScopeBuilder {
     private let sourceCode: SwiftSourceCode
-    
+
     internal init(source: String) {
         self.sourceCode = SwiftSourceCode(source: source)
+    }
+
+    internal init(source: String, path: String) {
+        self.sourceCode = SwiftSourceCode(source: source, path: SnippetPath.url(for: path))
     }
 }
 
@@ -93,5 +98,17 @@ extension PlainSourceScopeBuilder: HarmonizeScope {
     
     func structs() -> [Struct] {
         structs(includeNested: false)
+    }
+}
+
+// MARK: - SnippetPath
+
+/// Builds the path given to plain source.
+///
+/// Always absolute: a relative path would be resolved against the working directory, making
+/// what a rule matches on depend on where the tests were run from.
+internal enum SnippetPath {
+    static func url(for path: String) -> URL {
+        URL(fileURLWithPath: path.hasPrefix("/") ? path : "/" + path)
     }
 }
