@@ -175,6 +175,26 @@ extension SwiftSourceCode: Equatable, Hashable  {
     }
 }
 
+// MARK: - CustomDebugStringConvertible
+
+extension SwiftSourceCode: CustomDebugStringConvertible, CustomReflectable {
+    public var debugDescription: String {
+        if let url {
+            return "SwiftSourceCode(\(url.path))"
+        }
+
+        return "SwiftSourceCode(<memory>)"
+    }
+
+    public var customMirror: Mirror {
+        Mirror(
+            self,
+            children: ["filePath": url?.path ?? "<memory>"],
+            displayStyle: .class
+        )
+    }
+}
+
 // MARK: - SyntaxSourceCache
 
 internal extension SwiftSourceCode {
