@@ -44,6 +44,7 @@ public struct Class: Declaration, SyntaxNodeProviding {
 // MARK: - Capabilities Comformance
 
 extension Class: NamedDeclaration,
+                 ActorsProviding,
                  AttributesProviding,
                  ClassesProviding,
                  DeclarationsProviding,
@@ -75,6 +76,10 @@ extension Class: NamedDeclaration,
     
     public var name: String {
         node.name.text
+    }
+    
+    public var actors: [ActorDeclaration] {
+        declarations.as(ActorDeclaration.self)
     }
     
     public var classes: [Class] {

@@ -1,8 +1,8 @@
 //
-//  Extension.swift
+//  ActorDeclaration.swift
 //  Harmonize
 //
-//  Copyright 2024 Perry Street Software Inc.
+//  Copyright 2026 Perry Street Software Inc.
 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@
 
 import SwiftSyntax
 
-public struct Extension: Declaration, SyntaxNodeProviding {
-    public let node: ExtensionDeclSyntax
+public struct ActorDeclaration: Declaration, SyntaxNodeProviding {
+    public let node: ActorDeclSyntax
     
     public let parent: Declaration?
     
@@ -31,7 +31,7 @@ public struct Extension: Declaration, SyntaxNodeProviding {
     }
     
     internal init(
-        node: ExtensionDeclSyntax,
+        node: ActorDeclSyntax,
         parent: Declaration?,
         sourceCodeLocation: SourceCodeLocation
     ) {
@@ -43,23 +43,27 @@ public struct Extension: Declaration, SyntaxNodeProviding {
 
 // MARK: - Capabilities Comformance
 
-extension Extension: AttributesProviding,
-                     DeclarationsProviding,
-                     InheritanceProviding,
-                     ModifiersProviding,
-                     ParentDeclarationProviding,
-                     ActorsProviding,
-                     ClassesProviding,
-                     ProtocolsProviding,
-                     EnumsProviding,
-                     StructsProviding,
-                     VariablesProviding,
-                     FunctionsProviding,
-                     InitializersProviding,
-                     TypeProviding,
-                     SourceCodeProviding {
+extension ActorDeclaration: NamedDeclaration,
+                 ActorsProviding,
+                 AttributesProviding,
+                 ClassesProviding,
+                 DeclarationsProviding,
+                 EnumsProviding,
+                 FunctionsProviding,
+                 InitializersProviding,
+                 InheritanceProviding,
+                 ModifiersProviding,
+                 ParentDeclarationProviding,
+                 ProtocolsProviding,
+                 StructsProviding,
+                 VariablesProviding,
+                 SourceCodeProviding {
     public var attributes: [Attribute] {
         node.attributes.attributes
+    }
+    
+    public var declarations: [Declaration] {
+        DeclarationsCache.shared.declarations(from: node)
     }
     
     public var inheritanceTypesNames: [String] {
@@ -70,18 +74,14 @@ extension Extension: AttributesProviding,
         node.modifiers.modifiers
     }
     
-    public var typeAnnotation: TypeAnnotation? {
-        TypeAnnotation(node: node.extendedType)
+    public var name: String {
+        node.name.text
     }
     
-    public var declarations: [Declaration] {
-        DeclarationsCache.shared.declarations(from: node)
-    }
-
     public var actors: [ActorDeclaration] {
         declarations.as(ActorDeclaration.self)
     }
-
+    
     public var classes: [Class] {
         declarations.as(Class.self)
     }
@@ -105,7 +105,7 @@ extension Extension: AttributesProviding,
     public var functions: [Function] {
         declarations.as(Function.self)
     }
-    
+
     public var initializers: [Initializer] {
         declarations.as(Initializer.self)
     }
