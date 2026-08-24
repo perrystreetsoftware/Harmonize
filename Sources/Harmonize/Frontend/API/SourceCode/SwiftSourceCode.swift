@@ -89,6 +89,15 @@ public final class SwiftSourceCode {
         url
     }
     
+    /// Returns ``ActorDeclaration`` collection within this source.
+    public func actors(includeNested: Bool = true) -> [ActorDeclaration] {
+        if !includeNested {
+            return resolver.collection().actors
+        }
+        
+        return resolver.collection().declarations.as(ActorDeclaration.self)
+    }
+    
     /// Returns ``Class`` collection within this source.
     public func classes(includeNested: Bool = true) -> [Class] {
         if !includeNested {

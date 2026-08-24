@@ -31,6 +31,14 @@ internal class PlainSourceScopeBuilder {
 // MARK: - HarmonizeScope
 
 extension PlainSourceScopeBuilder: HarmonizeScope {
+    func actors(includeNested: Bool) -> [ActorDeclaration] {
+        sourceCode.actors(includeNested: includeNested)
+    }
+    
+    func actors() -> [ActorDeclaration] {
+        actors(includeNested: false)
+    }
+    
     func classes(includeNested: Bool) -> [Class] {
         sourceCode.classes(includeNested: includeNested)
     }

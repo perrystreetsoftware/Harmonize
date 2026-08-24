@@ -22,6 +22,14 @@ import HarmonizeSemantics
 
 /// Represents a scope in which contains a bunch of files containing declarations to be harmonized.
 public protocol HarmonizeScope {
+    /// Returns a collection of `actor` declarations.
+    ///
+    /// - parameter includeNested: Whether to include nested actor declarations.
+    func actors(includeNested: Bool) -> [ActorDeclaration]
+
+    /// Returns top-level `actor` declarations.
+    func actors() -> [ActorDeclaration]
+
     /// Returns a collection of `class` declarations.
     ///
     /// - parameter includeNested: Whether to include nested class declarations.
