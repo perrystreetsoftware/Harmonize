@@ -41,7 +41,7 @@ public struct ActorDeclaration: Declaration, SyntaxNodeProviding {
     }
 }
 
-// MARK: - Capabilities Comformance
+// MARK: - Capabilities Conformance
 
 extension ActorDeclaration: NamedDeclaration,
                  ActorsProviding,
