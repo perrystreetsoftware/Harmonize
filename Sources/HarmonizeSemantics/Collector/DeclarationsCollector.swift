@@ -33,6 +33,9 @@ package final class DeclarationsCollector: SyntaxVisitor {
     /// Collection of top-level only declarations.
     public private(set) var rootDeclarations: [Declaration] = []
     
+    /// Collection of top-level swift actor declarations.
+    public private(set) var actors: [ActorDeclaration] = []
+
     /// Collection of top-level swift class declarations.
     public private(set) var classes: [Class] = []
 
@@ -84,6 +87,19 @@ package final class DeclarationsCollector: SyntaxVisitor {
     
     private var parentNode: Syntax? {
         stack.last?.0
+    }
+    
+    public override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+        let `actor` = startScopeWith(node) {
+            ActorDeclaration(node: node, parent: parentDeclaration, sourceCodeLocation: sourceCodeLocation)
+        }
+        cacheDeclarationSupertype(declaration: `actor`)
+        actors.append(`actor`)
+        return .visitChildren
+    }
+    
+    public override func visitPost(_ node: ActorDeclSyntax) {
+        endScope(for: node)
     }
     
     public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {

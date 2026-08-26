@@ -49,6 +49,7 @@ extension Enum: NamedDeclaration,
                 InheritanceProviding,
                 ModifiersProviding,
                 ParentDeclarationProviding,
+                ActorsProviding,
                 ClassesProviding,
                 EnumsProviding,
                 StructsProviding,
@@ -79,6 +80,10 @@ extension Enum: NamedDeclaration,
     
     public var cases: [EnumCase] {
         declarations.as(EnumCase.self)
+    }
+    
+    public var actors: [ActorDeclaration] {
+        declarations.as(ActorDeclaration.self)
     }
     
     public var classes: [Class] {

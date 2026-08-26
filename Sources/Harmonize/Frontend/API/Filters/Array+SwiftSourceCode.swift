@@ -148,6 +148,14 @@ public extension Array where Element: SwiftSourceCode {
 
     // MARK: - Declaration Accessors
 
+    /// Returns all actors from all source files in the array.
+    ///
+    /// - parameter includeNested: Whether to include nested actors. Defaults to `true`.
+    /// - returns: A flat array of all actors across all source files.
+    func actors(includeNested: Bool = true) -> [ActorDeclaration] {
+        flatMap { $0.actors(includeNested: includeNested) }
+    }
+
     /// Returns all classes from all source files in the array.
     ///
     /// - parameter includeNested: Whether to include nested classes. Defaults to `true`.

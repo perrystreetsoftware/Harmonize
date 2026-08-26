@@ -60,6 +60,7 @@ extension Function: NamedDeclaration,
                     DeclarationsProviding,
                     ModifiersProviding,
                     ParentDeclarationProviding,
+                    ActorsProviding,
                     ClassesProviding,
                     ClosuresProviding,
                     ProtocolsProviding,
@@ -85,6 +86,10 @@ extension Function: NamedDeclaration,
     
     public var declarations: [Declaration] {
         DeclarationsCache.shared.declarations(from: node)
+    }
+    
+    public var actors: [ActorDeclaration] {
+        declarations.as(ActorDeclaration.self)
     }
     
     public var classes: [Class] {

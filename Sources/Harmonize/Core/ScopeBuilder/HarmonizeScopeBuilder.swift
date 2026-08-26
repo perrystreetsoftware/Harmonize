@@ -118,6 +118,16 @@ extension HarmonizeScopeBuilder: Excluding {
 // MARK: - HarmonizeScope
 
 extension HarmonizeScopeBuilder: HarmonizeScope {
+    func actors(includeNested: Bool) -> [ActorDeclaration] {
+        sources().flatMap {
+            $0.actors(includeNested: includeNested)
+        }
+    }
+    
+    func actors() -> [ActorDeclaration] {
+        actors(includeNested: false)
+    }
+    
     func classes(includeNested: Bool) -> [Class] {
         sources().flatMap {
             $0.classes(includeNested: includeNested)

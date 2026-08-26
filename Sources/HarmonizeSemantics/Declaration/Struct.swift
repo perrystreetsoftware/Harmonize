@@ -49,6 +49,7 @@ extension Struct: NamedDeclaration,
                   DeclarationsProviding,
                   InheritanceProviding,
                   ModifiersProviding,
+                  ActorsProviding,
                   ClassesProviding,
                   EnumsProviding,
                   StructsProviding,
@@ -75,6 +76,10 @@ extension Struct: NamedDeclaration,
     
     public var declarations: [Declaration] {
         DeclarationsCache.shared.declarations(from: node)
+    }
+    
+    public var actors: [ActorDeclaration] {
+        declarations.as(ActorDeclaration.self)
     }
     
     public var classes: [Class] {
