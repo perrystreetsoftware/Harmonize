@@ -2,6 +2,8 @@
 
 [![Tests](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml/badge.svg?branch=main)](https://github.com/perrystreetsoftware/Harmonize/actions/workflows/tests.yaml)
 
+> 🎤 **Harmonize is coming to a conference near you!** We'll be presenting it at [NSSpain](https://nsspain.com) (Logroño, September 16–18, 2026) and [Swift Connection](https://swiftconnection.io) (Paris, November 2–3, 2026). Come say hi!
+
 **Harmonize** is a modern linter for Swift that allows you to assert, validate, and harmonize your code’s structure and architecture by writing lint rules as unit tests—using [Quick](https://github.com/Quick/Quick), [XCTest](https://developer.apple.com/documentation/xctest/), or [Swift Testing](https://developer.apple.com/xcode/swift-testing/).
 
 This allows your team to keep your codebase clean, maintainable, and consistent as it grows, without relying on manual code reviews.
@@ -142,7 +144,7 @@ jobs:
 
 ## Example project
 
-You can see an example project that [uses Harmonize here](https://github.com/perrystreetsoftware/DemoAppIOS).
+See how our [Woof demo app](https://github.com/perrystreetsoftware/woof-demo) is using Harmonize to enforce its architecture. Woof mirrors the patterns we use in our production iOS apps, so its lint rules are a good starting point for your own project.
 
 ## Contributing
 
