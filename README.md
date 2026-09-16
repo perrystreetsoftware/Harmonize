@@ -87,6 +87,40 @@ You can create similar rules for any architectural or structural pattern that yo
 
 Unlike regex-based linters such as SwiftLint, Harmonize provides you with a rich and simple API to directly access any component in your codebase—including files, packages, classes, functions, and properties—and make assertions about them.
 
+### Adding context to error messages
+
+Instead of passing a plain `message` string in the error message of a lint rule, you can pass a `Rule` with additional context. This helps AI agents understand and fix the violations more reliably:
+
+```Swift
+viewModels.assertTrue(rule: rule) {
+    $0.inherits(from: "BaseViewModel")
+}
+
+private static let rule = Rule(
+    description: "ViewModels inherit from BaseViewModel.",
+    rationale: "BaseViewModel provides the lifecycle callbacks and stores Combine cancellables used by our ViewModels.",
+    fixHint: "Declare the class as `final class MyViewModel: BaseViewModel`.",
+    badExample: "final class MyViewModel { }",
+    goodExample: "final class MyViewModel: BaseViewModel { }"
+)
+```
+
+When the assertion fails, each violation is reported at its source location along with the full rule context:
+
+```
+RULE: ViewModels inherit from BaseViewModel.
+
+WHY: BaseViewModel provides the lifecycle callbacks and stores Combine cancellables used by our ViewModels.
+
+HOW TO FIX: Declare the class as `final class MyViewModel: BaseViewModel`.
+
+❌ BAD:
+final class MyViewModel { }
+
+✅ GOOD:
+final class MyViewModel: BaseViewModel { }
+```
+
 ## Installation
 
 ### Swift Package Manager (SPM)
@@ -137,6 +171,45 @@ jobs:
         run: |
           xcodebuild -scheme YourHarmonizeTestScheme -sdk macosx test
 ```
+
+## Integrate Harmonize with AI agents
+
+In your `AGENTS.md` or `CLAUDE.md` file, depending on the coding agent you use, add the following instruction to run the lint rules after every task:
+
+```markdown
+- After implementing a task, run the Harmonize lint rules using the `run-harmonize` skill.
+```
+
+Add the `run-harmonize/SKILL.md` into your project and adjust the Swift package path if your rules live somewhere other than `SwiftPackages/HarmonizeRules`:
+
+````markdown
+---
+name: run-harmonize
+description: Runs the Harmonize lint rules and fixes violations. Use after implementing a task.
+---
+
+Harmonize rules are unit tests in `SwiftPackages/HarmonizeRules/Tests/HarmonizeRulesTests/`.
+
+## How to run
+
+```bash
+# All rules
+swift test --package-path SwiftPackages/HarmonizeRules
+
+# One rule, by its class name
+swift test --package-path SwiftPackages/HarmonizeRules --filter ViewModelsInheritBaseViewModel
+```
+
+## How to fix violations
+
+For each failing rule:
+
+1. Read the failure. `RULE` says what is enforced, `WHY` explains the reasoning,
+`HOW TO FIX` says what to change, `❌ BAD` and `✅ GOOD` show the pattern to replace and the one to use.
+2. Fix the production code the failure points to. Do not add it to the baseline.
+3. Re-run only that rule with `--filter <RuleName>`.
+4. Repeat until it passes, then run the full suite once more.
+````
 
 ## Articles
 - [Architectural Linting for Swift made Easy](https://medium.com/perry-street-software-engineering/architectural-linting-for-swift-made-easy-75d7f9f569cd)

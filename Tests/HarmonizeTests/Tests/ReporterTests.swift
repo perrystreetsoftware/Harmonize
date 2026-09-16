@@ -69,8 +69,73 @@ final class ReporterTests: XCTestCase {
         XCTAssertEqual(entry.name, "BadViewModel")
         XCTAssertEqual(entry.file, fileURL.relativePath)
         XCTAssertEqual(entry.line, 3)
-        XCTAssertEqual(entry.message, "ViewModels must inherit BaseViewModel.")
+        XCTAssertEqual(entry.message, """
+        RULE: viewmodels-inherit-base
+
+        WHY: ViewModels must inherit BaseViewModel.
+
+        HOW TO FIX: Declare the class as `final class BadViewModel: BaseViewModel`.
+        """)
         XCTAssertEqual(entry.fixHint, "Declare the class as `final class BadViewModel: BaseViewModel`.")
+    }
+
+    func testRuleIdDefaultsToTheDeclaringFileName() throws {
+        XCTAssertEqual(Rule().id, "ReporterTests")
+        XCTAssertEqual(Rule(id: nil, description: "Some rule.").id, "ReporterTests")
+        XCTAssertEqual(Rule(id: "custom-id").id, "custom-id")
+    }
+
+    func testRuleMessageLaysOutEveryProvidedSection() throws {
+        let rule = Rule(
+            id: "viewmodels-inherit-base",
+            description: "ViewModels inherit from BaseViewModel.",
+            rationale: "BaseViewModel owns the lifecycle handling every screen relies on.",
+            fixHint: "Declare the class as `final class MyViewModel: BaseViewModel`.",
+            badExample: "final class MyViewModel: ObservableObject { }",
+            goodExample: "final class MyViewModel: BaseViewModel { }"
+        )
+
+        XCTAssertEqual(rule.message, """
+        RULE: ViewModels inherit from BaseViewModel.
+
+        WHY: BaseViewModel owns the lifecycle handling every screen relies on.
+
+        HOW TO FIX: Declare the class as `final class MyViewModel: BaseViewModel`.
+
+        ❌ BAD:
+        final class MyViewModel: ObservableObject { }
+
+        ✅ GOOD:
+        final class MyViewModel: BaseViewModel { }
+        """)
+    }
+
+    func testRuleMessageFallsBackToTheIdAndSkipsMissingSections() throws {
+        XCTAssertEqual(Rule(id: "no-foundation").message, "RULE: no-foundation")
+        XCTAssertEqual(
+            Rule(id: "no-foundation", fixHint: "Remove the import.").message,
+            "RULE: no-foundation\n\nHOW TO FIX: Remove the import."
+        )
+    }
+
+    func testViolationsCarryTheFullRuleMessage() throws {
+        let rule = Rule(
+            id: "viewmodels-inherit-base",
+            description: "ViewModels inherit from BaseViewModel.",
+            rationale: "BaseViewModel owns the lifecycle handling.",
+            badExample: "final class MyViewModel { }",
+            goodExample: "final class MyViewModel: BaseViewModel { }"
+        )
+
+        let reporter = JSONReporter()
+        HarmonizeReporting.withReporter(reporter) {
+            source.classes().assertTrue(rule: rule) { _ in false }
+            [source!].assertFalse(rule: rule) { _ in true }
+            source.classes().assertEmpty(rule: rule)
+        }
+
+        XCTAssertEqual(reporter.entries.count, 3)
+        XCTAssertEqual(reporter.entries.map(\.message), Array(repeating: rule.message, count: 3))
     }
 
     func testExplicitMessageWinsOverRationale() throws {
