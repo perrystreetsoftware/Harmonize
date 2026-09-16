@@ -121,8 +121,11 @@ internal final class GetFiles {
     ) -> Bool {
         guard !file.hasDirectoryPath, file.pathExtension == "swift" else { return false }
         
-        let parentUrlString = file.absoluteString.replacingOccurrences(of: basePath.absoluteString, with: "")
-        let parentUrl = URL(fileURLWithPath: parentUrlString)
+        let baseComponents = basePath.standardizedFileURL.pathComponents
+        let fileComponents = file.standardizedFileURL.pathComponents
+        let relativeComponents = fileComponents.starts(with: baseComponents)
+            ? Array(fileComponents.dropFirst(baseComponents.count))
+            : fileComponents
         
         func fileOrParentIsContainedInArray(array: [String]) -> Bool {
             array.contains { element in
@@ -136,7 +139,7 @@ internal final class GetFiles {
                     return file.lastPathComponent.range(of: regexPattern, options: .regularExpression) != nil
                 }
 
-                return parentUrl.pathComponents.contains { $0.hasSuffix(element) }
+                return relativeComponents.contains { $0.hasSuffix(element) }
             }
         }
         

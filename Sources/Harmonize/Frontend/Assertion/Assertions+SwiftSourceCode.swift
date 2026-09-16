@@ -26,6 +26,7 @@ public extension Array where Element: SwiftSourceCode {
     ///
     /// - parameters:
     ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
+    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
     ///   - baseline: An array of filenames that are known violations. Elements matching a baseline entry are expected to
     ///     *fail* the condition; if they pass, a "stale baseline" error is reported so the entry can be removed.
@@ -91,6 +92,7 @@ public extension Array where Element: SwiftSourceCode {
     ///
     /// - parameters:
     ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
+    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
     ///   - baseline: An array of filenames that are known violations. Elements matching a baseline entry are expected to
     ///     *pass* the condition (i.e. return true); if they return false, a "stale baseline" error is reported.
@@ -156,6 +158,7 @@ public extension Array where Element: SwiftSourceCode {
     ///
     /// - parameters:
     ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
+    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
     ///   - baseline: An array of filenames that are known violations. Elements matching a baseline entry are expected to
     ///     be present and are excluded from the empty check.
     ///   - fileID: The file ID to which the assertion should be attributed.
@@ -284,7 +287,7 @@ public extension Array where Element: SwiftSourceCode {
         line: UInt = #line,
         column: UInt = #column
     ) {
-        let message = additionalMessage ?? rule?.rationale
+        let message = additionalMessage ?? rule?.message
         var codeIssues: [CodeIssue] = []
 
         for element in elements {
