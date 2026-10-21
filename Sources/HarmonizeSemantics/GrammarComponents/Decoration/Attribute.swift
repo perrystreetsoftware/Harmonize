@@ -149,10 +149,12 @@ public extension Attribute {
                     
                     return Argument(label: $0.label?.text, value: expressionAsString)
                 }
+            #if !canImport(SwiftSyntax602)
             case .token(let value):
                 [Argument(label: nil, value: value.text)]
             case .string(let value):
                 [Argument(label: nil, value: value.trimmedDescription)]
+            #endif
             case .availability(let values):
                 values.compactMap { availability(from: $0.argument) }
             case .specializeArguments(let values):
@@ -169,6 +171,8 @@ public extension Attribute {
                 [Argument(label: nil, value: value.trimmedDescription)]
             case .backDeployedArguments(let value):
                 [Argument(label: value.beforeLabel.text, value: value.platforms.map { $0.platformVersion.description}.joined(separator: ","))]
+            #if !canImport(SwiftSyntax602)
+            // swift-syntax 602 parses these attributes as `.argumentList` (swiftlang/swift-syntax#3028).
             case .conventionArguments(let value):
                 [Argument(label: nil, value: value.conventionLabel.text)]
             case .conventionWitnessMethodArguments(let value):
@@ -177,18 +181,31 @@ public extension Attribute {
                 [Argument(label: nil, value: value.mangledName.trimmedDescription)]
             case .exposeAttributeArguments(let value):
                 [Argument(label: nil, value: value.trimmedDescription)]
+            #endif
             case .originallyDefinedInArguments(let value):
                 [Argument(label: nil, value: value.trimmedDescription)]
+            #if !canImport(SwiftSyntax602)
             case .underscorePrivateAttributeArguments(let value):
                 [Argument(label: nil, value: value.sourceFileLabel.text)]
+            #endif
             case .dynamicReplacementArguments(let value):
                 [Argument(label: nil, value: value.declName.trimmedDescription)]
+            #if !canImport(SwiftSyntax602)
             case .unavailableFromAsyncArguments(_):
                 []
+            #endif
             case .effectsArguments(let values):
                 values.map { Argument(label: nil, value: $0.text) }
             case .documentationArguments(let values):
                 values.map { Argument(label: nil, value: $0.label.text) }
+            #if canImport(SwiftSyntax602)
+            case .abiArguments(let value):
+                [Argument(label: nil, value: value.trimmedDescription)]
+            #endif
+            #if canImport(SwiftSyntax603)
+            case .specializedArguments(let value):
+                [Argument(label: nil, value: value.trimmedDescription)]
+            #endif
             }
         }
         
