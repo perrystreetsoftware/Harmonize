@@ -37,10 +37,10 @@ jobs:
         run: swift package resolve swift-syntax --version ${{ matrix.swift-syntax }}
 
       - name: Build
-        run: swift build
+        run: swift build --build-tests
 
       - name: Run MacOS Tests
-        run: swift test
+        run: swift test --skip-build
 
   ios:
     name: iOS
