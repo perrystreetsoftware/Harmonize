@@ -25,6 +25,7 @@ jobs:
 
   swift-syntax:
     strategy:
+      fail-fast: false
       matrix:
         swift-syntax: ['601.0.1', '602.0.0', '603.0.2', '604.0.0']
     name: swift-syntax ${{ matrix.swift-syntax }}
@@ -34,7 +35,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Resolve swift-syntax ${{ matrix.swift-syntax }}
-        run: swift package resolve swift-syntax --version ${{ matrix.swift-syntax }}
+        run: |
+          swift package resolve
+          swift package resolve swift-syntax --version ${{ matrix.swift-syntax }}
 
       - name: Build
         run: swift build --build-tests
