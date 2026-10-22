@@ -217,6 +217,13 @@ package final class DeclarationsCollector: SyntaxVisitor {
         imports.append(Import(node: node, sourceCodeLocation: sourceCodeLocation))
         return .skipChildren
     }
+
+    #if canImport(SwiftSyntax602)
+    // `@abi(func ...)` holds an ABI-only signature, not a declaration of its own.
+    public override func visit(_ node: ABIAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
+        .skipChildren
+    }
+    #endif
     
     private func startScopeWith<T: Declaration>(_ node: SyntaxProtocol, make: () -> [T]) -> [T] {
         let newDeclarations = make()

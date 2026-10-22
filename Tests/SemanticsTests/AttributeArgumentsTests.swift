@@ -62,6 +62,11 @@ final class AttributeArgumentsTests: XCTestCase {
     func testABIArguments() throws {
         #if canImport(SwiftSyntax602)
         XCTAssertEqual(arguments(of: "abi"), ["func abiName()"])
+
+        // The ABI-only signature must not be collected as a declaration.
+        let functions = visitor.functions
+        XCTAssertFalse(functions.contains { $0.name == "abiName" })
+        XCTAssertEqual(functions.first { $0.name == "abi" }?.functions.count, 0)
         #endif
     }
 
