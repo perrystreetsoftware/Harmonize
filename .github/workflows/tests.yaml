@@ -23,6 +23,28 @@ jobs:
       - name: Run MacOS Tests
         run: swift test
 
+  swift-syntax:
+    strategy:
+      fail-fast: false
+      matrix:
+        swift-syntax: ['601.0.1', '602.0.0', '603.0.2', '604.0.0']
+    name: swift-syntax ${{ matrix.swift-syntax }}
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve swift-syntax ${{ matrix.swift-syntax }}
+        run: |
+          swift package resolve
+          swift package resolve swift-syntax --version ${{ matrix.swift-syntax }}
+
+      - name: Build
+        run: swift build --build-tests
+
+      - name: Run MacOS Tests
+        run: swift test --skip-build
+
   ios:
     name: iOS
     runs-on: xcode-27
