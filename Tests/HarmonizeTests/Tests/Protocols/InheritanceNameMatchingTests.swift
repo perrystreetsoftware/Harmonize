@@ -11,6 +11,7 @@ final class InheritanceNameMatchingTests: XCTestCase {
     final class ModuleViewModel_INM: MyModule.BaseViewModel_INM {}
     final class GenericViewModel_INM: GenericBase_INM<String> {}
     final class Store_INM: ObservableObject, Sendable {}
+    final class NestedViewModel_INM: Container_INM<Int>.BaseViewModel_INM {}
     """
 
     func testNonStrictDoesNotMatchTypesThatOnlyContainTheName() {
@@ -28,5 +29,21 @@ final class InheritanceNameMatchingTests: XCTestCase {
             .assertTrue(strict: true) { $0.inherits(from: "GenericBase_INM") }
         scope.withName("Store_INM")
             .assertTrue(strict: true) { $0.conforms(to: "Sendable") }
+    }
+
+    func testNonStrictNormalizesTheRequestedName() {
+        let scope = Harmonize.on(source: source).classes()
+
+        scope.withName("ModuleViewModel_INM")
+            .assertTrue(strict: true) { $0.inherits(from: "MyModule.BaseViewModel_INM") }
+        scope.withName("GenericViewModel_INM")
+            .assertTrue(strict: true) { $0.inherits(from: "GenericBase_INM<String>") }
+    }
+
+    func testNonStrictKeepsNestedTypeAfterGenericContainer() {
+        let nested = Harmonize.on(source: source).classes().withName("NestedViewModel_INM")
+
+        nested.assertTrue(strict: true) { $0.inherits(from: "BaseViewModel_INM") }
+        nested.assertFalse(strict: true) { $0.inherits(from: "Container_INM") }
     }
 }

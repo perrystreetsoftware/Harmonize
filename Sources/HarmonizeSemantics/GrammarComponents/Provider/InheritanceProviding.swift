@@ -43,10 +43,12 @@ public extension InheritanceProviding {
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
-        inheritanceTypesNames.contains {
-            let hasDirectInheritance = strict ? $0 == name : $0.baseTypeName == name
+        let baseName = name.baseTypeName
+
+        return inheritanceTypesNames.contains {
+            let hasDirectInheritance = strict ? $0 == name : $0.baseTypeName == baseName
             let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = strict ? supertype == name : supertype?.baseTypeName == name
+            let hasTransitiveInheritance = strict ? supertype == name : supertype?.baseTypeName == baseName
             return hasDirectInheritance || hasTransitiveInheritance
         }
     }
@@ -89,10 +91,19 @@ public extension InheritanceProviding {
 
 private extension String {
     /// The bare type name, without module qualification or generic arguments:
-    /// `MyModule.BaseViewModel` and `BaseViewModel<State>` both become `BaseViewModel`.
+    /// `MyModule.BaseViewModel`, `BaseViewModel<State>` and `Container<Int>.BaseViewModel`
+    /// all become `BaseViewModel`.
     var baseTypeName: String {
-        let withoutGenerics = prefix { $0 != "<" }
-        let withoutModule = withoutGenerics.split(separator: ".").last ?? withoutGenerics[...]
-        return withoutModule.trimmingCharacters(in: .whitespaces)
+        var depth = 0
+        let withoutGenerics = filter {
+            switch $0 {
+            case "<": depth += 1
+            case ">": depth -= 1
+            default: return depth == 0
+            }
+            return false
+        }
+        let lastComponent = withoutGenerics.split(separator: ".").last ?? withoutGenerics[...]
+        return lastComponent.trimmingCharacters(in: .whitespaces)
     }
 }
