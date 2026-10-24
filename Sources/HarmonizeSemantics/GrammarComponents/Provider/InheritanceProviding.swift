@@ -44,9 +44,9 @@ public extension InheritanceProviding {
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
         inheritanceTypesNames.contains {
-            let hasDirectInheritance = strict ? $0 == name : $0.contains(name)
+            let hasDirectInheritance = strict ? $0 == name : $0.baseTypeName == name
             let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = strict ? supertype == name : (supertype?.contains(name) ?? false)
+            let hasTransitiveInheritance = strict ? supertype == name : supertype?.baseTypeName == name
             return hasDirectInheritance || hasTransitiveInheritance
         }
     }
@@ -69,7 +69,7 @@ public extension InheritanceProviding {
     /// - Parameters:
     ///   - protos: A variadic list of protocol names to check for conformance.
     ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
-    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
+    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, names match ignoring module qualification and generic arguments. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: String..., includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
         protos.contains { inherits(from: $0, includeTransitiveInheritance: includeTransitiveInheritance, strict: strict) }
@@ -80,9 +80,19 @@ public extension InheritanceProviding {
     /// - Parameters:
     ///   - protos: An array of protocol names to check for conformance.
     ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
-    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
+    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, names match ignoring module qualification and generic arguments. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: [String], includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
         protos.contains { inherits(from: $0, includeTransitiveInheritance: includeTransitiveInheritance, strict: strict) }
+    }
+}
+
+private extension String {
+    /// The bare type name, without module qualification or generic arguments:
+    /// `MyModule.BaseViewModel` and `BaseViewModel<State>` both become `BaseViewModel`.
+    var baseTypeName: String {
+        let withoutGenerics = prefix { $0 != "<" }
+        let withoutModule = withoutGenerics.split(separator: ".").last ?? withoutGenerics[...]
+        return withoutModule.trimmingCharacters(in: .whitespaces)
     }
 }
