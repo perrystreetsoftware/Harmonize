@@ -21,11 +21,12 @@ import Foundation
 
 /// A thread-safe, generic dictionary that allows concurrent read and write operations.
 ///
-/// The dictionary uses an `NSLock` to synchronize all access to its elements.
+/// The dictionary uses a `DispatchQueue` with a barrier for writes, ensuring that data
+/// integrity is maintained during concurrent access.
 ///
 package final class ConcurrentDictionary<Key: Hashable, Value> {
     private var elements: [Key: Value] = [:]
-    private let lock = NSLock()
+    private let queue = DispatchQueue(label: "harmonize.concurrentdic.queue", attributes: .concurrent)
     
     public init() {}
     
@@ -40,26 +41,26 @@ package final class ConcurrentDictionary<Key: Hashable, Value> {
     
     // Removes the given key and its value from the dictionary.
     public func removeValue(forKey key: Key) -> Value? {
-        return lock.withLock {
+        return queue.sync(flags: .barrier) {
             elements.removeValue(forKey: key)
         }
     }
     
     // Removes all elements from the dictionary.
     public func removeAll() {
-        lock.withLock {
+        queue.async(flags: .barrier) {
             self.elements.removeAll()
         }
     }
     
     private func getValue(key: Key) -> Value? {
-        lock.withLock {
+        queue.sync {
             elements[key]
         }
     }
     
     private func setValue(key: Key, value: Value?) {
-        lock.withLock {
+        queue.async(flags: .barrier) {
             self.elements[key] = value
         }
     }
