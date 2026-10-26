@@ -37,7 +37,6 @@ let package = Package(
             ]
         ),
         .target(name: "HarmonizeUtils"),
-        .testTarget(name: "HarmonizeUtilsTests", dependencies: ["HarmonizeUtils"]),
         .testTarget(name: "HarmonizeTests", dependencies: ["Harmonize"]),
         .testTarget(
             name: "SemanticsTests",
