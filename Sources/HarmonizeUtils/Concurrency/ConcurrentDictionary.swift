@@ -41,7 +41,7 @@ package final class ConcurrentDictionary<Key: Hashable, Value> {
     
     // Removes the given key and its value from the dictionary.
     public func removeValue(forKey key: Key) -> Value? {
-        return queue.sync {
+        return queue.sync(flags: .barrier) {
             elements.removeValue(forKey: key)
         }
     }
