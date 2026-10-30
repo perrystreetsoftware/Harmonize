@@ -78,10 +78,12 @@ final class StaticCatalogTests: XCTestCase {
         XCTAssertTrue(catalog.documentedCategories.isEmpty)
     }
 
-    func testTwoRulesInOneFileGetSuffixedIds() throws {
-        let twoRules = ruleSource(className: "PairedRules") + "\n" + """
+    private func secondRule(id: String? = nil) -> String {
+        """
+
         extension PairedRules {
             static let second = Rule(
+                \(id.map { "id: \"\($0)\"," } ?? "")
                 title: "Second title.",
                 category: Categories.viewmodel,
                 rationale: "Second why.",
@@ -91,19 +93,128 @@ final class StaticCatalogTests: XCTestCase {
             )
         }
         """
-        try repository.addRuleFile("PairedRules", contents: twoRules)
-
-        let catalog = try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)
-
-        XCTAssertEqual(catalog.rules.map(\.id), ["paired-rules", "paired-rules-2"])
     }
 
-    func testQualifiedRuleInitializerIsRecognized() throws {
-        try repository.addRuleFile("Qualified", contents: ruleSource(className: "Qualified", ruleTypeName: "Harmonize.Rule"))
+    func testTwoRulesWithOneIdFailWithBothLocations() throws {
+        let file = try repository.addRuleFile("PairedRules", contents: ruleSource(className: "PairedRules") + secondRule())
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            let message = "\(error)"
+            XCTAssertTrue(message.contains("rule id 'paired-rules' is already used at \(file.path):"), message)
+            XCTAssertTrue(message.contains("Set an explicit id"), message)
+        }
+    }
+
+    func testAnExplicitIdSeparatesTwoRulesInOneFile() throws {
+        try repository.addRuleFile("PairedRules", contents: ruleSource(className: "PairedRules") + secondRule(id: "paired-rules-second"))
 
         let catalog = try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)
 
-        XCTAssertEqual(catalog.rules.map(\.id), ["qualified"])
+        XCTAssertEqual(catalog.rules.map(\.id), ["paired-rules", "paired-rules-second"])
+    }
+
+    func testOneExplicitIdInTwoFilesFails() throws {
+        try repository.addRuleFile("First", contents: ruleSource(className: "First", id: "shared-id"))
+        try repository.addRuleFile("Second", contents: ruleSource(className: "Second", id: "shared-id"))
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            XCTAssertTrue("\(error)".contains("rule id 'shared-id' is already used"), "\(error)")
+        }
+    }
+
+    func testEveryInitializerFormIsRecognized() throws {
+        try repository.addRuleFile("Qualified", contents: ruleSource(className: "Qualified", ruleTypeName: "Harmonize.Rule"))
+        try repository.addRuleFile("ExplicitInit", contents: ruleSource(className: "ExplicitInit", ruleTypeName: "Rule.init"))
+        try repository.addRuleFile("QualifiedInit", contents: ruleSource(className: "QualifiedInit", ruleTypeName: "Harmonize.Rule.init"))
+        try repository.addRuleFile("Spaced", contents: ruleSource(className: "Spaced", ruleTypeName: "Rule "))
+        try repository.addRuleFile("Contextual", contents: """
+        import Harmonize
+        import XCTest
+
+        final class Contextual: XCTestCase {
+            func testRule() {
+                Harmonize.productionCode().classes().assertTrue(rule: .init(
+                    title: "Contextual title.",
+                    category: Categories.viewmodel,
+                    rationale: "Why.",
+                    howToFix: "Fix.",
+                    badExample: "b",
+                    goodExample: "g"
+                )) { _ in true }
+            }
+        }
+        """)
+
+        let catalog = try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)
+
+        XCTAssertEqual(
+            catalog.rules.map(\.id).sorted(),
+            ["contextual", "explicit-init", "qualified", "qualified-init", "spaced"]
+        )
+        XCTAssertEqual(catalog.rules.first { $0.id == "contextual" }?.title, "Contextual title.")
+    }
+
+    func testAContextualInitThatIsNotARuleIsIgnored() throws {
+        try repository.addRuleFile("Other", contents: """
+        import XCTest
+
+        final class Other: XCTestCase {
+            func testSomething() {
+                let value: SomeType = .init(title: "Not a rule.", category: "x")
+                _ = value
+            }
+        }
+        """)
+
+        let catalog = try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)
+
+        XCTAssertTrue(catalog.rules.isEmpty)
+    }
+
+    func testAMemberExpressionForAStringFieldFails() throws {
+        let source = """
+        import Harmonize
+        final class Shared: XCTestCase {
+            static let text = "x"
+            private static let rule = Rule(
+                title: "Title.",
+                category: Categories.viewmodel,
+                rationale: "", howToFix: Self.text, badExample: "", goodExample: ""
+            )
+        }
+        """
+        let file = try repository.addRuleFile("Shared", contents: source)
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            let message = "\(error)"
+            XCTAssertTrue(message.contains("\(file.path):7:"), message)
+            XCTAssertTrue(message.contains("'howToFix' must be a string literal"), message)
+        }
+    }
+
+    func testAnUnknownDisclosureFails() throws {
+        try repository.addRuleFile("Sometimes", contents: ruleSource(className: "Sometimes", disclosure: ".sometimes"))
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            XCTAssertTrue("\(error)".contains("'disclosure' must be .upfront, .progressive or .deferred"), "\(error)")
+        }
+    }
+
+    func testAnIdThatIsNotKebabCaseFails() throws {
+        try repository.addRuleFile("Escaping", contents: ruleSource(className: "Escaping", id: "../../../other-skill/SKILL"))
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            XCTAssertTrue("\(error)".contains("rule id '../../../other-skill/SKILL' is not valid"), "\(error)")
+        }
+    }
+
+    func testIdValidation() {
+        for id in ["a", "view-models-inherit-base", "rule2-check"] {
+            XCTAssertTrue(StaticCatalogLoader.isValidId(id), id)
+        }
+        for id in ["", "ViewModels", "a_b", "a b", "-a", "a-", "a--b", "a/b", "..", "é"] {
+            XCTAssertFalse(StaticCatalogLoader.isValidId(id), id)
+        }
     }
 
     func testNonLiteralArgumentFailsWithFileAndLine() throws {
@@ -122,8 +233,8 @@ final class StaticCatalogTests: XCTestCase {
 
         XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
             let message = (error as? HarmonizeSkillsError)?.message ?? ""
-            XCTAssertTrue(message.contains("\(file.path):4:"), message)
-            XCTAssertTrue(message.contains("'title'"), message)
+            XCTAssertTrue(message.contains("\(file.path):5:"), message)
+            XCTAssertTrue(message.contains("'title' must be a string literal"), message)
         }
     }
 

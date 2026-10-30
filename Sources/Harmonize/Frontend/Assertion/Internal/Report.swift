@@ -19,15 +19,6 @@
 
 import Foundation
 
-/// Records that an assertion carrying rule metadata ran, so the rule appears
-/// in the ``RuleCatalog`` even when nothing violates it. Returns the rule
-/// under its effective id (the catalog may suffix colliding derived ids), so
-/// violations report the same id the catalog lists.
-internal func registerRule(_ rule: Rule?, definedIn file: StaticString) -> Rule? {
-    guard let rule else { return nil }
-    return RuleCatalog.register(rule, definedIn: file.description)
-}
-
 /// Delivers one assertion's violations plus its aggregate summary to the
 /// active ``Reporter``.
 internal func reportViolations(

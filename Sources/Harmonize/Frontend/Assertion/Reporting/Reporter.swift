@@ -58,11 +58,11 @@ public struct Violation {
     /// Metadata of the rule that produced this violation, when provided.
     public let rule: Rule?
 
-    /// The text to show a human. When the message is the rationale of the rule
-    /// (the default), this is the full formatted rule: title, rationale, how to
-    /// fix, and the examples. An explicit `message:` appears as given.
+    /// The text to show a human. When the assertion gave no explicit message,
+    /// this is the full formatted rule: title, rationale, how to fix, and the
+    /// examples. An explicit `message:` appears as given.
     public var displayMessage: String {
-        if let rule, message == rule.nonEmptyRationale {
+        if let rule, message == rule.defaultMessage {
             return rule.formatted
         }
         return message

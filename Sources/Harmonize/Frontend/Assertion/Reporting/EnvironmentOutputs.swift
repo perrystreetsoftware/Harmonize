@@ -19,22 +19,18 @@
 
 import Foundation
 
-/// Machine-readable output that needs no code. Two environment variables
-/// control it, so CI, scripts and AI agents get structured results from a
+/// Machine-readable output that needs no code. One environment variable
+/// controls it, so CI, scripts, and AI agents get structured results from a
 /// plain `swift test` or `xcodebuild test` run:
 ///
 /// - `HARMONIZE_VIOLATIONS_FILE=<path>`: Harmonize also collects the
 ///   violations as JSON and writes them to `<path>` when the process exits.
-///   The tests fail as usual.
-/// - `HARMONIZE_RULE_CATALOG_FILE=<path>`: Harmonize writes every evaluated
-///   ``Rule`` as a JSON catalog to `<path>` when the process exits, with or
-///   without violations.
+///   The tests fail as usual. A clean run writes an empty array.
 ///
-/// With `xcodebuild test`, prefix each variable with `TEST_RUNNER_` so that
-/// it reaches the test process (for example `TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`).
+/// With `xcodebuild test`, prefix the variable with `TEST_RUNNER_` so that
+/// it reaches the test process (`TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`).
 internal enum EnvironmentOutputs {
     static let violationsFileKey = "HARMONIZE_VIOLATIONS_FILE"
-    static let catalogFileKey = "HARMONIZE_RULE_CATALOG_FILE"
 
     /// The collector for the violations file, or nil when the file is not requested.
     static var violationsReporter: JSONReporter?
@@ -55,21 +51,21 @@ internal enum EnvironmentOutputs {
     }
 
     /// Registers the write at process exit. It does this once per process, and
-    /// only when one of the output variables is set.
+    /// only when the variable is set.
     static func ensureExitWriteScheduled() {
         _ = scheduledOnce
     }
 
     private static let scheduledOnce: Void = {
         let environment = ProcessInfo.processInfo.environment
-        guard environment[violationsFileKey] != nil || environment[catalogFileKey] != nil else {
+        guard environment[violationsFileKey] != nil else {
             return
         }
         atexit { EnvironmentOutputs.writeOutputs() }
     }()
 
-    /// Writes the requested outputs. Harmonize calls it at process exit. Tests
-    /// can pass their own environment.
+    /// Writes the violations file when it is requested. Harmonize calls it at
+    /// process exit. Tests can pass their own environment.
     static func writeOutputs(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
@@ -78,9 +74,6 @@ internal enum EnvironmentOutputs {
             // that tools can see the difference between "no violations" and "no run".
             let data = violationsReporter.flatMap { try? $0.jsonData() } ?? Data("[]".utf8)
             write(data, to: path, label: "violations")
-        }
-        if let path = environment[catalogFileKey] {
-            write(try? RuleCatalog.jsonData(), to: path, label: "rule catalog")
         }
     }
 

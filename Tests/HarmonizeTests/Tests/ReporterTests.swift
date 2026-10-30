@@ -75,6 +75,7 @@ final class ReporterTests: XCTestCase {
     func testJSONReporterCollectsViolationsWithRuleMetadata() throws {
         let rule = makeRule(
             id: "viewmodels-inherit-base",
+            title: "ViewModels inherit from BaseViewModel.",
             rationale: "ViewModels must inherit BaseViewModel.",
             howToFix: "Declare the class as `final class BadViewModel: BaseViewModel`."
         )
@@ -88,6 +89,7 @@ final class ReporterTests: XCTestCase {
         let entry = try XCTUnwrap(reporter.entries.first)
         XCTAssertEqual(entry.kind, .violation)
         XCTAssertEqual(entry.ruleId, "viewmodels-inherit-base")
+        XCTAssertEqual(entry.title, "ViewModels inherit from BaseViewModel.")
         XCTAssertEqual(entry.name, "BadViewModel")
         XCTAssertEqual(entry.file, fileURL.relativePath)
         XCTAssertEqual(entry.line, 3)
@@ -178,6 +180,8 @@ final class ReporterTests: XCTestCase {
         XCTAssertEqual(reporter.entries.count, 1)
         let entry = try XCTUnwrap(reporter.entries.first)
         XCTAssertEqual(entry.kind, .assertion)
+        XCTAssertNil(entry.ruleId)
+        XCTAssertNil(entry.title)
         XCTAssertEqual(entry.message, "Expected true but got empty collection instead.")
         XCTAssertTrue(entry.file.hasSuffix("ReporterTests.swift"))
     }
@@ -194,6 +198,7 @@ final class ReporterTests: XCTestCase {
         let entry = try XCTUnwrap(reporter.entries.first)
         XCTAssertEqual(entry.kind, .violation)
         XCTAssertEqual(entry.ruleId, "no-foundation")
+        XCTAssertNil(entry.title)
         XCTAssertEqual(entry.name, "BadViewModel.swift")
         XCTAssertEqual(entry.line, 1)
     }
@@ -227,6 +232,22 @@ final class ReporterTests: XCTestCase {
         let decoded = try JSONDecoder().decode([JSONReporter.Entry].self, from: data)
         XCTAssertEqual(decoded, reporter.entries)
         XCTAssertEqual(decoded.first?.ruleId, "no-classes")
+    }
+
+    func testARuleWithoutARationaleStillShowsTheFullRule() throws {
+        let rule = makeRule(id: "no-rationale", title: "Title.", howToFix: "Fix.")
+
+        let reporter = JSONReporter()
+        HarmonizeReporting.withReporter(reporter) {
+            source.classes().assertTrue(rule: rule) { _ in false }
+        }
+
+        let entry = try XCTUnwrap(reporter.entries.first)
+        XCTAssertEqual(entry.message, "Title.")
+        let violation = Violation(name: "X", message: entry.message, filePath: fileURL, line: 1, column: 1, fileID: "M/X.swift", rule: rule)
+        XCTAssertEqual(violation.displayMessage, "RULE: Title.\n\nHOW TO FIX: Fix.")
+
+        XCTAssertEqual(makeRule(id: "bare").defaultMessage, "bare")
     }
 
     func testDisplayMessageShowsTheFullRuleWhenNoExplicitMessageWasGiven() throws {

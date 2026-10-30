@@ -143,6 +143,17 @@ final class SkillsEmitterTests: XCTestCase {
         XCTAssertEqual(try SkillsEmitter.validatedSkillName("harmonize-2"), "harmonize-2")
     }
 
+    func testWriteRefusesPathsOutsideTheSkillDirectory() throws {
+        for path in ["references/../../../other-skill/SKILL.md", "/etc/skill.md", ""] {
+            XCTAssertThrowsError(
+                try SkillsEmitter.write([GeneratedFile(relativePath: path, content: "x")], config: config),
+                path
+            ) { error in
+                XCTAssertTrue("\(error)".contains("outside the skill directory"), "\(error)")
+            }
+        }
+    }
+
     func testWriteIsIdempotentAndSweepsStaleReferences() throws {
         let catalog = self.catalog(rules: [makeRule(id: "a-rule")])
         let result = try SkillsEmitter.render(catalog, config: config, generatorHint: "x")

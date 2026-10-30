@@ -39,8 +39,8 @@ import Foundation
 /// }
 /// ```
 public protocol RuleCategory {
-    /// The canonical category name. It groups rules in catalogs and names the
-    /// layer file of the generated skill (`references/<categoryName>.md`).
+    /// The canonical category name. It groups the rules and names the layer
+    /// file of the generated skill (`references/<categoryName>.md`).
     var categoryName: String { get }
 
     /// One or two sentences that say what the category covers and when to
@@ -90,8 +90,9 @@ public struct Rule: Codable, Equatable {
     ///
     /// The default is the file name of the rule in kebab case
     /// (`ViewModelsInheritBase.swift` → `view-models-inherit-base`). Set it to
-    /// choose a better name, or when one file defines more than one rule. Do not
-    /// change an id after you publish it.
+    /// choose a better name, or when one file defines more than one rule. Use
+    /// lowercase letters, digits, and single hyphens. Do not change an id after
+    /// you publish it.
     public let id: String
 
     /// One sentence that says what the rule checks, for example
@@ -184,36 +185,11 @@ public struct Rule: Codable, Equatable {
     private static let acronymBoundary = try! NSRegularExpression(pattern: "([A-Z]+)([A-Z][a-z])")
     private static let wordBoundary = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])")
 
-    /// True when all descriptive fields are equal. The catalog uses it to see
-    /// if a rule with a known id is the same rule or a different one.
-    internal func sameContent(as other: Rule) -> Bool {
-        title == other.title
-            && category == other.category
-            && disclosure == other.disclosure
-            && rationale == other.rationale
-            && howToFix == other.howToFix
-            && badExample == other.badExample
-            && goodExample == other.goodExample
-    }
-
-    /// A copy of this rule with a different id. The catalog uses it to resolve
-    /// an id collision.
-    internal func withId(_ newId: String) -> Rule {
-        Rule(
-            id: newId,
-            title: title,
-            category: category,
-            disclosure: disclosure,
-            rationale: rationale,
-            howToFix: howToFix,
-            badExample: badExample,
-            goodExample: goodExample
-        )
-    }
-
-    /// The rationale, or nil when it is empty. Reporters use it as the violation message.
-    internal var nonEmptyRationale: String? {
-        rationale.isEmpty ? nil : rationale
+    /// The violation message when the assertion gives no explicit message:
+    /// the rationale, or the title or the id when the rationale is empty.
+    internal var defaultMessage: String {
+        if !rationale.isEmpty { return rationale }
+        return title.isEmpty ? id : title
     }
 
     /// The rule as text for humans. Reporters and assertion messages show it.

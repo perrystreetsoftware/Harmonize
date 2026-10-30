@@ -74,8 +74,6 @@ public extension Array where Element: SwiftSourceCode {
         column: UInt,
         condition: (Element) -> Bool
     ) {
-        let rule = registerRule(rule, definedIn: file)
-
         if strict && isEmpty {
             reportInline(
                 message: "Expected true but got empty collection instead.",
@@ -169,8 +167,6 @@ public extension Array where Element: SwiftSourceCode {
         column: UInt,
         condition: (Element) -> Bool
     ) {
-        let rule = registerRule(rule, definedIn: file)
-
         if strict && isEmpty {
             reportInline(
                 message: "Expected false but got empty collection instead.",
@@ -256,8 +252,6 @@ public extension Array where Element: SwiftSourceCode {
         line: UInt,
         column: UInt
     ) {
-        let rule = registerRule(rule, definedIn: file)
-
         let nonBaselineElements = filter { !isInBaseline($0, baseline: baseline) }
 
         guard !nonBaselineElements.isEmpty else {
@@ -370,7 +364,7 @@ public extension Array where Element: SwiftSourceCode {
         line: UInt = #line,
         column: UInt = #column
     ) {
-        let message = additionalMessage ?? rule?.nonEmptyRationale
+        let message = additionalMessage ?? rule?.defaultMessage
         var codeIssues: [CodeIssue] = []
 
         for element in elements {

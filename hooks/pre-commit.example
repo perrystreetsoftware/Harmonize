@@ -32,9 +32,20 @@ if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.s
   done
 
   if [ -n "$SKILLS_TOOL" ]; then
-    if "$SKILLS_TOOL" --package-dir "$RULES_PACKAGE"; then
+    SNAPSHOT=$(mktemp -d "${TMPDIR:-/tmp}/harmonize-skills.XXXXXX")
+    git ls-files -z -- .harmonize.yaml "$RULES_PACKAGE/Tests" | git checkout-index -z --stdin --prefix="$SNAPSHOT/"
+
+    if "$SKILLS_TOOL" --package-dir "$SNAPSHOT/$RULES_PACKAGE" && [ -d "$SNAPSHOT/$SKILLS_DIR/$SKILL_NAME" ]; then
+      rm -rf "$SKILLS_DIR/$SKILL_NAME"
+      mkdir -p "$SKILLS_DIR"
+      cp -R "$SNAPSHOT/$SKILLS_DIR/$SKILL_NAME" "$SKILLS_DIR/"
+      rm -rf "$SNAPSHOT"
       git add -A -- "$SKILLS_DIR/$SKILL_NAME"
+      if ! git diff --quiet -- "$RULES_PACKAGE/Tests" || git ls-files --others --exclude-standard -- "$RULES_PACKAGE/Tests" | grep -q .; then
+        echo "pre-commit: some rule files have unstaged changes. The skill was generated from the staged versions." >&2
+      fi
     else
+      rm -rf "$SNAPSHOT"
       echo "pre-commit: harmonize-skills failed. Fix the rule metadata and commit again." >&2
       exit 1
     fi

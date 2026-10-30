@@ -43,13 +43,22 @@ public final class JSONReporter: Reporter {
             case assertion
         }
 
+        /// A rule violation or a failure of the assertion itself.
         public let kind: Kind
+        /// The id of the rule, or nil for an assertion without rule metadata.
         public let ruleId: String?
+        /// The title of the rule, or nil when the rule has no title.
+        public let title: String?
+        /// The name of the violating declaration or file, or nil for an assertion failure.
         public let name: String?
+        /// The path of the violating file, or of the assertion for an assertion failure.
         public let file: String
         public let line: Int
         public let column: Int
+        /// The rationale of the rule. The title or the id when the rationale is
+        /// empty. The failure text for an assertion failure.
         public let message: String
+        /// How to correct the violation, or nil when the rule gives no fix.
         public let howToFix: String?
     }
 
@@ -80,12 +89,13 @@ public final class JSONReporter: Reporter {
     }
 
     public func report(violations: [Violation], summary: String, at location: AssertionLocation) {
-        // The summary is a human-readable rollup of the individual violations;
-        // machine consumers only need the per-violation entries.
+        // The summary repeats the violations in one text. Machine consumers
+        // need only the entries, one per violation.
         append(violations.map { violation in
             Entry(
                 kind: .violation,
                 ruleId: violation.rule?.id,
+                title: violation.rule.flatMap { $0.title.isEmpty ? nil : $0.title },
                 name: violation.name,
                 file: violation.filePath.relativePath,
                 line: violation.line,
@@ -95,8 +105,8 @@ public final class JSONReporter: Reporter {
             )
         })
 
-        // But if no violation had a resolvable source location, the summary
-        // is the only record of the failure — keep it.
+        // When no violation has a source location, the summary is the only
+        // record of the failure. Keep it.
         if violations.isEmpty {
             report(failure: summary, at: location)
         }
@@ -107,6 +117,7 @@ public final class JSONReporter: Reporter {
             Entry(
                 kind: .assertion,
                 ruleId: nil,
+                title: nil,
                 name: nil,
                 file: location.filePath,
                 line: location.line,

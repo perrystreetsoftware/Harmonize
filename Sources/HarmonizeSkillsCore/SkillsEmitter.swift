@@ -271,6 +271,10 @@ public enum SkillsEmitter {
         let produced = Set(files.map(\.relativePath))
 
         for file in files {
+            let components = file.relativePath.split(separator: "/")
+            guard !components.isEmpty, !file.relativePath.hasPrefix("/"), !components.contains("..") else {
+                throw HarmonizeSkillsError("refusing to write outside the skill directory: \(file.relativePath)")
+            }
             let url = skillDirectory.appendingPathComponent(file.relativePath)
             let content = file.content + "\n"
             if let existing = try? String(contentsOf: url, encoding: .utf8), existing == content {

@@ -201,7 +201,7 @@ Pass a `Rule` to `assertTrue`, `assertFalse` or `assertEmpty` with the `rule:` p
 
 | Field | Content |
 | --- | --- |
-| `id` | A stable identifier. Harmonize derives it from the file name (`ViewModelsInheritBase.swift` → `view-models-inherit-base`). If one file has more than one rule, Harmonize adds `-2`, `-3` and so on to the derived ids. Set the id to get a better name. Do not change an id after you publish it. |
+| `id` | A stable identifier. Harmonize derives it from the file name (`ViewModelsInheritBase.swift` → `view-models-inherit-base`). Set the id to get a better name. If one file has more than one rule, give the rules explicit ids. Use lowercase letters, digits, and single hyphens. Do not change an id after you publish it. |
 | `title` | One sentence that says what the rule checks. |
 | `category` | The layer the rule belongs to. Pass a case of your category enum (see below). |
 | `disclosure` | When an agent must learn the rule: `.upfront`, `.progressive` (the default) or `.deferred`. The value does not change enforcement. |

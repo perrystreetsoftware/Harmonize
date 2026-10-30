@@ -106,8 +106,7 @@ public enum StaticCatalogLoader {
         var problems: [String] = []
 
         for file in files {
-            guard let source = try? String(contentsOf: file, encoding: .utf8),
-                  source.contains("Rule(") || source.contains("RuleCategory") else { continue }
+            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
             let tree = Parser.parse(source: source)
             let converter = SourceLocationConverter(fileName: file.path, tree: tree)
 
@@ -123,13 +122,10 @@ public enum StaticCatalogLoader {
             rawRules.append(contentsOf: ruleVisitor.calls.map { (file, $0) })
         }
 
-        if !problems.isEmpty {
-            throw HarmonizeSkillsError(problems.joined(separator: "\n"))
-        }
-
-        // Resolve categories and ids. Derived ids that collide get -2, -3 and so
-        // on in file order. The runtime catalog does the same in registration order.
-        var seenIds: [String: Int] = [:]
+        // Resolve categories and ids. Two rules with one id would share a
+        // reference file, and the runtime reports both under that id. The
+        // project sets an explicit id on one of them.
+        var locationsById: [String: String] = [:]
         var rules: [StaticRule] = []
         for (file, call) in rawRules {
             let categoryName: String
@@ -138,12 +134,12 @@ public enum StaticCatalogLoader {
             case .enumCase(let caseName): categoryName = categoriesByCase[caseName]?.name ?? caseName
             }
 
-            var id = call.id ?? derivedId(fromFileName: file.deletingPathExtension().lastPathComponent)
-            if let count = seenIds[id] {
-                seenIds[id] = count + 1
-                id = "\(id)-\(count + 1)"
+            let id = call.id ?? derivedId(fromFileName: file.deletingPathExtension().lastPathComponent)
+            let location = "\(file.path):\(call.line)"
+            if let previous = locationsById[id] {
+                problems.append("\(location): rule id '\(id)' is already used at \(previous). Set an explicit id on one of the two rules.")
             } else {
-                seenIds[id] = 1
+                locationsById[id] = location
             }
 
             rules.append(StaticRule(
@@ -157,6 +153,10 @@ public enum StaticCatalogLoader {
                 goodExample: call.goodExample,
                 definedIn: file
             ))
+        }
+
+        if !problems.isEmpty {
+            throw HarmonizeSkillsError(problems.joined(separator: "\n"))
         }
 
         try checkCategoryNames(rules.map(\.category))
@@ -194,6 +194,14 @@ public enum StaticCatalogLoader {
     private static let acronymBoundary = try! NSRegularExpression(pattern: "([A-Z]+)([A-Z][a-z])")
     private static let wordBoundary = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])")
 
+    /// An explicit id names a file of the generated skill. It must be kebab
+    /// case: lowercase ASCII letters, digits, and single hyphens.
+    public static func isValidId(_ id: String) -> Bool {
+        !id.isEmpty
+            && id.allSatisfy { $0.isASCII && (($0.isLetter && $0.isLowercase) || $0.isNumber || $0 == "-") }
+            && !id.hasPrefix("-") && !id.hasSuffix("-") && !id.contains("--")
+    }
+
     /// Mirrors `Rule.derivedId(fromFilePath:)` in the Harmonize library:
     /// `SomeRuleName` becomes `some-rule-name`.
     public static func derivedId(fromFileName name: String) -> String {
@@ -225,6 +233,7 @@ private struct RuleCall {
     let howToFix: String
     let badExample: String
     let goodExample: String
+    let line: Int
 }
 
 private final class RuleCallVisitor: SyntaxVisitor {
@@ -239,24 +248,49 @@ private final class RuleCallVisitor: SyntaxVisitor {
         super.init(viewMode: .sourceAccurate)
     }
 
+    /// The arguments that must be string literals.
+    private static let stringArguments: Set<String> = ["id", "title", "rationale", "howToFix", "badExample", "goodExample"]
+    private static let disclosures: Set<String> = ["upfront", "progressive", "deferred"]
+
     override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-        guard isRuleInitializer(node.calledExpression) else { return .visitChildren }
+        guard isRuleInitializer(node) else { return .visitChildren }
 
         var strings: [String: String] = [:]
         var members: [String: String] = [:]
         for argument in node.arguments {
             guard let label = argument.label?.text else { continue }
-            if let literal = argument.expression.as(StringLiteralExprSyntax.self) {
+            let literal = argument.expression.as(StringLiteralExprSyntax.self)
+            let member = argument.expression.as(MemberAccessExprSyntax.self)?.declName.baseName.text
+
+            if Self.stringArguments.contains(label) {
+                guard let literal else {
+                    report(at: argument, "argument '\(label)' must be a string literal, so that skills can be generated without running the rules")
+                    return .skipChildren
+                }
                 guard let value = literal.representedLiteralValue else {
                     report(at: argument, "argument '\(label)' must be a plain string literal (no interpolation)")
                     return .skipChildren
                 }
+                if label == "id", !StaticCatalogLoader.isValidId(value) {
+                    report(at: argument, "rule id '\(value)' is not valid: use lowercase letters, digits and single hyphens")
+                    return .skipChildren
+                }
                 strings[label] = value
-            } else if let member = argument.expression.as(MemberAccessExprSyntax.self) {
-                members[label] = member.declName.baseName.text
-            } else {
-                report(at: argument, "argument '\(label)' must be a literal, so that skills can be generated without running the rules")
-                return .skipChildren
+            } else if label == "category" {
+                if let value = literal?.representedLiteralValue {
+                    strings[label] = value
+                } else if let member {
+                    members[label] = member
+                } else {
+                    report(at: argument, "argument 'category' must be a string literal or a case of a RuleCategory enum")
+                    return .skipChildren
+                }
+            } else if label == "disclosure" {
+                guard let member, Self.disclosures.contains(member) else {
+                    report(at: argument, "argument 'disclosure' must be .upfront, .progressive or .deferred")
+                    return .skipChildren
+                }
+                members[label] = member
             }
         }
 
@@ -282,19 +316,28 @@ private final class RuleCallVisitor: SyntaxVisitor {
             rationale: strings["rationale"] ?? "",
             howToFix: strings["howToFix"] ?? "",
             badExample: strings["badExample"] ?? "",
-            goodExample: strings["goodExample"] ?? ""
+            goodExample: strings["goodExample"] ?? "",
+            line: node.startLocation(converter: converter).line
         ))
         return .skipChildren
     }
 
-    private func isRuleInitializer(_ expression: ExprSyntax) -> Bool {
-        if let reference = expression.as(DeclReferenceExprSyntax.self) {
+    /// Recognizes `Rule(...)`, `Harmonize.Rule(...)`, `Rule.init(...)`,
+    /// `Harmonize.Rule.init(...)`, and `.init(...)` as a `rule:` argument.
+    private func isRuleInitializer(_ node: FunctionCallExprSyntax) -> Bool {
+        let called = node.calledExpression
+        if let reference = called.as(DeclReferenceExprSyntax.self) {
             return reference.baseName.text == "Rule"
         }
-        if let member = expression.as(MemberAccessExprSyntax.self) {
-            return member.declName.baseName.text == "Rule"
+        guard let member = called.as(MemberAccessExprSyntax.self) else { return false }
+        let name = member.declName.baseName.text
+        if name == "Rule" { return true }
+        guard name == "init" else { return false }
+        if let base = member.base {
+            return base.as(DeclReferenceExprSyntax.self)?.baseName.text == "Rule"
+                || base.as(MemberAccessExprSyntax.self)?.declName.baseName.text == "Rule"
         }
-        return false
+        return node.parent?.as(LabeledExprSyntax.self)?.label?.text == "rule"
     }
 
     private func report(at node: some SyntaxProtocol, _ message: String) {

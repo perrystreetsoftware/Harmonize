@@ -42,7 +42,7 @@ Pass `rule:` to `assertTrue`, `assertFalse` or `assertEmpty`. The `message:` par
 
 | Field         | Purpose                                                                  |
 | ------------- | ------------------------------------------------------------------------ |
-| `id`          | A stable kebab-case identifier. Harmonize derives it from the file name (`ViewModelsInheritBase.swift` → `view-models-inherit-base`). Set it only for a better name, when a file has several rules (derived ids that collide get the suffixes `-2`, `-3`, ...), or when the derived form breaks an acronym. Do not change an id after you publish it. |
+| `id`          | A stable kebab-case identifier. Harmonize derives it from the file name (`ViewModelsInheritBase.swift` → `view-models-inherit-base`). Set it only for a better name, when a file has several rules (two rules must not share an id), or when the derived form breaks an acronym. Use lowercase letters, digits, and single hyphens. Do not change an id after you publish it. |
 | `title`       | One sentence that says what the rule checks.                             |
 | `category`    | The layer of the rule. Pass a case of the category enum of the project (see below). |
 | `disclosure`  | When agents must learn the rule. `.upfront`: the rule applies to almost every task. Use it rarely, because each upfront title goes into the skill description and the description has a limit of 1024 characters. `.progressive`: the rule applies to one layer (the default). `.deferred`: the fix is mechanical, and the test failure explains it. The value does not change enforcement. |
