@@ -19,7 +19,7 @@ If the project has its own runner script or skill (for example `run-harmonize.sh
 Run from the repository root. Send the log to a file. Request the JSON report with one environment variable:
 
 ```bash
-mkdir -p .harmonize-out
+rm -rf .harmonize-out && mkdir -p .harmonize-out
 HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/violations.json" \
 swift test --package-path <rules-package> > .harmonize-out/test.log 2>&1
 echo "exit code: $?"
@@ -28,6 +28,7 @@ echo "exit code: $?"
 - To run one rule, add `--filter <RuleTestClassName>` to the `swift test` command.
 - With `xcodebuild`, name the variable `TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`. The prefix makes the variable reach the test process.
 - Always pass an absolute path for the output file.
+- When the test workers run in parallel (`swift test --parallel`, or Xcode parallel testing), end the path with a slash: `HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/"`. Each worker then writes its own `violations-<pid>.json` file into that folder. Read all of them.
 - Add `.harmonize-out/` to `.gitignore`.
 - The test run fails on violations as usual. Harmonize writes the JSON file when the process exits.
 

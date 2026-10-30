@@ -130,6 +130,46 @@ final class EnvironmentOutputsTests: XCTestCase {
         XCTAssertTrue(violations.isEmpty)
     }
 
+    func testAProjectScanSchedulesTheExitWriteWhenTheVariableIsSet() throws {
+        let previousEnvironment = EnvironmentOutputs.environment
+        let previousScheduled = EnvironmentOutputs.exitWriteScheduled
+        defer {
+            EnvironmentOutputs.environment = previousEnvironment
+            EnvironmentOutputs.exitWriteScheduled = previousScheduled
+        }
+
+        EnvironmentOutputs.exitWriteScheduled = false
+        EnvironmentOutputs.environment = [:]
+        _ = Harmonize.on("Fixtures/SwiftTesting")
+        XCTAssertFalse(EnvironmentOutputs.exitWriteScheduled, "nothing to schedule without the variable")
+
+        EnvironmentOutputs.environment = [EnvironmentOutputs.violationsFileKey: "/tmp/unused.json"]
+        _ = Harmonize.productionCode()
+        XCTAssertTrue(EnvironmentOutputs.exitWriteScheduled, "a scan schedules the write before any assertion runs")
+    }
+
+    func testADirectoryPathGivesEachProcessItsOwnFile() throws {
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EnvironmentOutputsTests-Dir-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: outputDirectory) }
+        let directoryPath = outputDirectory.path + "/"
+
+        XCTAssertEqual(EnvironmentOutputs.outputURL(for: "/tmp/violations.json").path, "/tmp/violations.json")
+        XCTAssertEqual(
+            EnvironmentOutputs.outputURL(for: directoryPath).lastPathComponent,
+            "violations-\(ProcessInfo.processInfo.processIdentifier).json"
+        )
+
+        let previousViolationsReporter = EnvironmentOutputs.violationsReporter
+        defer { EnvironmentOutputs.violationsReporter = previousViolationsReporter }
+        EnvironmentOutputs.violationsReporter = nil
+
+        EnvironmentOutputs.writeOutputs(environment: [EnvironmentOutputs.violationsFileKey: directoryPath])
+
+        let files = try FileManager.default.contentsOfDirectory(atPath: outputDirectory.path)
+        XCTAssertEqual(files, ["violations-\(ProcessInfo.processInfo.processIdentifier).json"])
+    }
+
     func testWriteOutputsDoesNothingWithoutTheVariable() throws {
         let outputDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("EnvironmentOutputsTests-None-\(UUID().uuidString)")

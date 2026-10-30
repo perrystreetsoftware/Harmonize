@@ -89,6 +89,7 @@ internal class HarmonizeScopeBuilder {
     ) {
         self.file = file
         self.getFiles = GetFiles(file)
+        EnvironmentOutputs.ensureExitWriteScheduled()
         self.folder = folder
         self.includingOnly = includingOnly
         self.exclusions = exclusions

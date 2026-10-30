@@ -26,22 +26,36 @@ import Foundation
 /// - `HARMONIZE_VIOLATIONS_FILE=<path>`: Harmonize also collects the
 ///   violations as JSON and writes them to `<path>` when the process exits.
 ///   The tests fail as usual. A clean run writes an empty array.
+/// - `HARMONIZE_VIOLATIONS_FILE=<directory>/`: when the path ends with a
+///   slash, each test process writes its own file,
+///   `<directory>/violations-<pid>.json`. Use this form when the test workers
+///   run in parallel, for example with `swift test --parallel` or with Xcode
+///   parallel testing. Each worker is a separate process, and one shared file
+///   would keep only the last worker. Clear the directory before the run.
 ///
 /// With `xcodebuild test`, prefix the variable with `TEST_RUNNER_` so that
 /// it reaches the test process (`TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`).
 internal enum EnvironmentOutputs {
     static let violationsFileKey = "HARMONIZE_VIOLATIONS_FILE"
 
+    /// The environment of the process. Tests can replace it.
+    static var environment: [String: String] = ProcessInfo.processInfo.environment
+
     /// The collector for the violations file, or nil when the file is not requested.
     static var violationsReporter: JSONReporter?
+
+    /// True after the write at process exit is registered.
+    static var exitWriteScheduled = false
+
+    private static let lock = NSLock()
 
     /// Makes the default reporter for assertions. It is a plain
     /// ``XCTestReporter``. When the violations file is requested, it is a
     /// ``CompositeReporter`` that fails the test and also collects JSON.
     static func makeDefaultReporter(
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = EnvironmentOutputs.environment
     ) -> Reporter {
-        ensureExitWriteScheduled()
+        ensureExitWriteScheduled(environment: environment)
         guard environment[violationsFileKey] != nil else {
             return XCTestReporter()
         }
@@ -51,38 +65,40 @@ internal enum EnvironmentOutputs {
     }
 
     /// Registers the write at process exit. It does this once per process, and
-    /// only when the variable is set.
-    static func ensureExitWriteScheduled() {
-        _ = scheduledOnce
-    }
-
-    private static let scheduledOnce: Void = {
-        let environment = ProcessInfo.processInfo.environment
-        guard environment[violationsFileKey] != nil else {
-            return
-        }
+    /// only when the variable is set. Every project scan calls it, and so does
+    /// the default reporter. A passing assertion never touches the reporter,
+    /// so the scan is what makes a clean run write its file.
+    static func ensureExitWriteScheduled(
+        environment: [String: String] = EnvironmentOutputs.environment
+    ) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !exitWriteScheduled, environment[violationsFileKey] != nil else { return }
+        exitWriteScheduled = true
         atexit { EnvironmentOutputs.writeOutputs() }
-    }()
+    }
 
     /// Writes the violations file when it is requested. Harmonize calls it at
     /// process exit. Tests can pass their own environment.
     static func writeOutputs(
-        environment: [String: String] = ProcessInfo.processInfo.environment
+        environment: [String: String] = EnvironmentOutputs.environment
     ) {
-        if let path = environment[violationsFileKey] {
-            // A clean run may never use the reporter. Write an empty array, so
-            // that tools can see the difference between "no violations" and "no run".
-            let data = violationsReporter.flatMap { try? $0.jsonData() } ?? Data("[]".utf8)
-            write(data, to: path, label: "violations")
-        }
+        guard let path = environment[violationsFileKey] else { return }
+        // A clean run may never use the reporter. Write an empty array, so
+        // that tools can see the difference between "no violations" and "no run".
+        let data = violationsReporter.flatMap { try? $0.jsonData() } ?? Data("[]".utf8)
+        write(data, to: outputURL(for: path), label: "violations")
     }
 
-    private static func write(_ data: Data?, to path: String, label: String) {
-        guard let data else {
-            FileHandle.standardError.write(Data("Harmonize: failed to encode \(label) JSON.\n".utf8))
-            return
-        }
+    /// A path that ends with a slash is a directory. Each process then writes
+    /// its own file, so parallel test workers do not overwrite each other.
+    static func outputURL(for path: String) -> URL {
         let url = URL(fileURLWithPath: path)
+        guard path.hasSuffix("/") else { return url }
+        return url.appendingPathComponent("violations-\(ProcessInfo.processInfo.processIdentifier).json")
+    }
+
+    private static func write(_ data: Data, to url: URL, label: String) {
         do {
             try FileManager.default.createDirectory(
                 at: url.deletingLastPathComponent(),
@@ -91,7 +107,7 @@ internal enum EnvironmentOutputs {
             try data.write(to: url)
         } catch {
             FileHandle.standardError.write(
-                Data("Harmonize: failed to write \(label) to \(path): \(error)\n".utf8)
+                Data("Harmonize: failed to write \(label) to \(url.path): \(error)\n".utf8)
             )
         }
     }

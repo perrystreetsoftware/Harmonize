@@ -20,16 +20,10 @@ SKILLS_DIR=".agents/skills"      # must match `skills.output` in .harmonize.yaml
 SKILL_NAME="harmonize"           # must match `skills.name` in .harmonize.yaml
 
 if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.swift" | grep -q .; then
-  SKILLS_TOOL=""
-  for candidate in \
-    "$RULES_PACKAGE/.build/out/Products/Debug/HarmonizeSkills" \
-    "$RULES_PACKAGE/.build/debug/HarmonizeSkills" \
-    "$RULES_PACKAGE"/.build/*-apple-macosx/debug/HarmonizeSkills; do
-    if [ -x "$candidate" ]; then
-      SKILLS_TOOL="$candidate"
-      break
-    fi
-  done
+  # SwiftPM versions build the plugin tool into different folders, for example
+  # .build/out/Products/Debug/HarmonizeSkills or .build/plugins/tools/debug/HarmonizeSkills-tool.
+  SKILLS_TOOL=$(find "$RULES_PACKAGE/.build" -maxdepth 6 -type f -perm -u+x \
+    \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1)
 
   if [ -n "$SKILLS_TOOL" ]; then
     SNAPSHOT=$(mktemp -d "${TMPDIR:-/tmp}/harmonize-skills.XXXXXX")

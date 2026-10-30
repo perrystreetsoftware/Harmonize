@@ -106,7 +106,15 @@ public enum StaticCatalogLoader {
         var problems: [String] = []
 
         for file in files {
-            guard let source = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            let source: String
+            do {
+                source = try String(contentsOf: file, encoding: .utf8)
+            } catch {
+                // A skipped file would drop its rules, and the writer would then
+                // remove their reference pages as stale.
+                problems.append("\(file.path): cannot read the file as UTF-8: \(error.localizedDescription)")
+                continue
+            }
             let tree = Parser.parse(source: source)
             let converter = SourceLocationConverter(fileName: file.path, tree: tree)
 

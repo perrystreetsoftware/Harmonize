@@ -208,6 +208,17 @@ final class StaticCatalogTests: XCTestCase {
         }
     }
 
+    func testAFileThatIsNotUTF8Fails() throws {
+        try repository.addRuleFile("Valid", contents: ruleSource(className: "Valid"))
+        let binary = repository.rulesPackage.appendingPathComponent("Tests/RulesTests/Binary.swift")
+        try Data([0xFF, 0xFE, 0x00, 0xC3]).write(to: binary)
+
+        XCTAssertThrowsError(try StaticCatalogLoader.load(rulesPackage: repository.rulesPackage)) { error in
+            let message = "\(error)"
+            XCTAssertTrue(message.contains("Binary.swift: cannot read the file as UTF-8"), message)
+        }
+    }
+
     func testIdValidation() {
         for id in ["a", "view-models-inherit-base", "rule2-check"] {
             XCTAssertTrue(StaticCatalogLoader.isValidId(id), id)
