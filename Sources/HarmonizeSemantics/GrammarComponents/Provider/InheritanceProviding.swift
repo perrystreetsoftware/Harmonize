@@ -18,6 +18,8 @@
 //
 
 import Foundation
+import SwiftParser
+import SwiftSyntax
 
 /// A protocol that provides information about the types a declaration inherits from or conforms to.
 public protocol InheritanceProviding {
@@ -43,12 +45,19 @@ public extension InheritanceProviding {
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
-        inheritanceTypesNames.contains {
-            let hasDirectInheritance = strict ? $0 == name : $0.contains(name)
-            let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = strict ? supertype == name : (supertype?.contains(name) ?? false)
-            return hasDirectInheritance || hasTransitiveInheritance
+        let transitiveSupertypes = includeTransitiveInheritance
+            ? inheritanceTypesNames.compactMap { DeclarationsCache.shared.supertype(of: $0) }
+            : []
+        let supertypes = inheritanceTypesNames + transitiveSupertypes
+
+        guard !strict else {
+            return supertypes.contains(name)
         }
+
+        // `A, B` and `A & B` are equivalent spellings, so the requested names are
+        // matched against the union of every inherited name, not one entry at a time.
+        let inheritedBaseNames = supertypes.reduce(into: Set<String>()) { $0.formUnion($1.baseTypeNames) }
+        return name.baseTypeNames.isSubset(of: inheritedBaseNames)
     }
 
     /// Checks whether the declaration conforms to a given protocol type.
@@ -69,7 +78,7 @@ public extension InheritanceProviding {
     /// - Parameters:
     ///   - protos: A variadic list of protocol names to check for conformance.
     ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
-    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
+    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, names match ignoring module qualification and generic arguments. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: String..., includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
         protos.contains { inherits(from: $0, includeTransitiveInheritance: includeTransitiveInheritance, strict: strict) }
@@ -80,9 +89,46 @@ public extension InheritanceProviding {
     /// - Parameters:
     ///   - protos: An array of protocol names to check for conformance.
     ///   - includeTransitiveInheritance: To also include transitive types inheritance. True by default.
-    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, the check allows for partial matches. Default is `false`.
+    ///   - strict: If `true`, the check requires exact matches for the protocol names; if `false`, names match ignoring module qualification and generic arguments. Default is `false`.
     /// - Returns: `true` if the declaration conforms to all of the given protocol names, `false` otherwise.
     func conforms(to protos: [String], includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {
         protos.contains { inherits(from: $0, includeTransitiveInheritance: includeTransitiveInheritance, strict: strict) }
+    }
+}
+
+private extension String {
+    /// The bare type names, without module qualification or generic arguments:
+    /// `MyModule.BaseViewModel`, `BaseViewModel<State>`, `Container<() -> Void>.BaseViewModel`
+    /// all become `["BaseViewModel"]`, and a composition `A & B` becomes `["A", "B"]`.
+    /// The name is parsed as a Swift type, so generic arguments of any shape
+    /// (function types, tuples, nested generics) are handled by the parser.
+    var baseTypeNames: Set<String> {
+        var parser = Parser(self)
+        return TypeSyntax.parse(from: &parser).baseTypeNames
+    }
+}
+
+private extension TypeSyntax {
+    var baseTypeNames: Set<String> {
+        if let composition = self.as(CompositionTypeSyntax.self) {
+            return Set(composition.elements.flatMap(\.type.baseTypeNames))
+        }
+
+        if let member = self.as(MemberTypeSyntax.self) {
+            return [member.name.unescapedText]
+        }
+
+        if let identifier = self.as(IdentifierTypeSyntax.self) {
+            return [identifier.name.unescapedText]
+        }
+
+        return [trimmedDescription]
+    }
+}
+
+private extension TokenSyntax {
+    /// The identifier without escaping backticks: `` `Base` `` becomes `Base`.
+    var unescapedText: String {
+        identifier?.name ?? text
     }
 }
