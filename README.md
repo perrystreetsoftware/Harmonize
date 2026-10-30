@@ -142,7 +142,13 @@ In Xcode:
 Or, manually add it to your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", from: "0.2.0"),
+.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", from: "1.3.0"),
+```
+
+The Harmonize integration with AI agents is currently in beta:
+
+```swift
+.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", exact: "2.0.0-beta.1"),
 ```
 
 You can optionally create a dedicated Swift package for your Harmonize lint rules to separate them from the rest of the unit tests.
@@ -184,6 +190,8 @@ jobs:
 ## Integrate Harmonize with AI agents
 
 Harmonize becomes even more powerful when you integrate it with your AI agents. Your AI agents can run the lint rules after every task, detect the violations, and correct them. Harmonize can also generate a skill for your architecture from your lint rules. AI agents read it before they implement a task.
+
+This integration is available in version `2.0.0-beta.1`. See [Installation](#installation).
 
 ### Run the rules after a task
 
