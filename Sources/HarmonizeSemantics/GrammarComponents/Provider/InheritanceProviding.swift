@@ -45,15 +45,19 @@ public extension InheritanceProviding {
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
-        let baseNames = name.baseTypeNames
-        let matches: (String) -> Bool = { strict ? $0 == name : baseNames.isSubset(of: $0.baseTypeNames) }
+        let transitiveSupertypes = includeTransitiveInheritance
+            ? inheritanceTypesNames.compactMap { DeclarationsCache.shared.supertype(of: $0) }
+            : []
+        let supertypes = inheritanceTypesNames + transitiveSupertypes
 
-        return inheritanceTypesNames.contains {
-            let hasDirectInheritance = matches($0)
-            let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = supertype.map(matches) ?? false
-            return hasDirectInheritance || hasTransitiveInheritance
+        guard !strict else {
+            return supertypes.contains(name)
         }
+
+        // `A, B` and `A & B` are equivalent spellings, so the requested names are
+        // matched against the union of every inherited name, not one entry at a time.
+        let inheritedBaseNames = supertypes.reduce(into: Set<String>()) { $0.formUnion($1.baseTypeNames) }
+        return name.baseTypeNames.isSubset(of: inheritedBaseNames)
     }
 
     /// Checks whether the declaration conforms to a given protocol type.
@@ -111,13 +115,20 @@ private extension TypeSyntax {
         }
 
         if let member = self.as(MemberTypeSyntax.self) {
-            return [member.name.text]
+            return [member.name.unescapedText]
         }
 
         if let identifier = self.as(IdentifierTypeSyntax.self) {
-            return [identifier.name.text]
+            return [identifier.name.unescapedText]
         }
 
         return [trimmedDescription]
+    }
+}
+
+private extension TokenSyntax {
+    /// The identifier without escaping backticks: `` `Base` `` becomes `Base`.
+    var unescapedText: String {
+        identifier?.name ?? text
     }
 }
