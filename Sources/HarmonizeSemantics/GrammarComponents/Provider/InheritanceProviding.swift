@@ -18,6 +18,8 @@
 //
 
 import Foundation
+import SwiftParser
+import SwiftSyntax
 
 /// A protocol that provides information about the types a declaration inherits from or conforms to.
 public protocol InheritanceProviding {
@@ -91,19 +93,21 @@ public extension InheritanceProviding {
 
 private extension String {
     /// The bare type name, without module qualification or generic arguments:
-    /// `MyModule.BaseViewModel`, `BaseViewModel<State>` and `Container<Int>.BaseViewModel`
-    /// all become `BaseViewModel`.
+    /// `MyModule.BaseViewModel`, `BaseViewModel<State>`, `Container<() -> Void>.BaseViewModel`
+    /// all become `BaseViewModel`. The name is parsed as a Swift type, so generic arguments
+    /// of any shape (function types, tuples, nested generics) are handled by the parser.
     var baseTypeName: String {
-        var depth = 0
-        let withoutGenerics = filter {
-            switch $0 {
-            case "<": depth += 1
-            case ">": depth -= 1
-            default: return depth == 0
-            }
-            return false
+        var parser = Parser(self)
+        let type = TypeSyntax.parse(from: &parser)
+
+        if let member = type.as(MemberTypeSyntax.self) {
+            return member.name.text
         }
-        let lastComponent = withoutGenerics.split(separator: ".").last ?? withoutGenerics[...]
-        return lastComponent.trimmingCharacters(in: .whitespaces)
+
+        if let identifier = type.as(IdentifierTypeSyntax.self) {
+            return identifier.name.text
+        }
+
+        return type.trimmedDescription
     }
 }
