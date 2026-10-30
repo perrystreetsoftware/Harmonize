@@ -1,0 +1,14 @@
+{
+  "name": "harmonize",
+  "owner": {
+    "name": "Perry Street Software",
+    "url": "https://github.com/perrystreetsoftware"
+  },
+  "plugins": [
+    {
+      "name": "harmonize",
+      "source": "./",
+      "description": "Architectural linting for Swift, for humans and AI agents: run Harmonize rules with machine-readable output, fix violations, and write new rules."
+    }
+  ]
+}

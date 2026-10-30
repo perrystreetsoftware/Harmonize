@@ -45,7 +45,14 @@ final class ActorsTests: XCTestCase {
     func testAssertsOnActorMembers() throws {
         scope.actors()
             .withName("AccountService")
-            .assertTrue(message: "Actors must keep their state private", strict: true) {
+            .assertTrue(rule: Rule(
+                title: "Actors must keep their state private.",
+                category: "concurrency",
+                rationale: "Public mutable state defeats actor isolation.",
+                howToFix: "Mark the stored properties private.",
+                badExample: "actor A { var count = 0 }",
+                goodExample: "actor A { private var count = 0 }"
+            ), strict: true) {
                 $0.variables.allSatisfy { $0.modifiers.contains(.private) }
             }
     }

@@ -58,6 +58,16 @@ public struct Violation {
     /// Metadata of the rule that produced this violation, when provided.
     public let rule: Rule?
 
+    /// The text to show a human. When the assertion gave no explicit message,
+    /// this is the full formatted rule: title, rationale, how to fix, and the
+    /// examples. An explicit `message:` appears as given.
+    public var displayMessage: String {
+        if let rule, message == rule.defaultMessage {
+            return rule.formatted
+        }
+        return message
+    }
+
     public init(
         name: String,
         message: String,
@@ -100,7 +110,7 @@ public protocol Reporter {
 /// Process-wide access to the active ``Reporter``.
 public enum HarmonizeReporting {
     private static let lock = NSLock()
-    private static var activeReporter: Reporter = XCTestReporter()
+    private static var activeReporter: Reporter = EnvironmentOutputs.makeDefaultReporter()
 
     /// The reporter all assertions deliver their results to.
     /// Defaults to ``XCTestReporter``.

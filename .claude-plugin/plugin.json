@@ -1,0 +1,13 @@
+{
+  "name": "harmonize",
+  "description": "Architectural linting for Swift, for humans and AI agents: run Harmonize rules with machine-readable output, fix violations, and write new rules.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Perry Street Software",
+    "url": "https://github.com/perrystreetsoftware"
+  },
+  "homepage": "https://github.com/perrystreetsoftware/Harmonize",
+  "repository": "https://github.com/perrystreetsoftware/Harmonize",
+  "license": "Apache-2.0",
+  "keywords": ["swift", "linter", "architecture", "ios", "static-analysis"]
+}
