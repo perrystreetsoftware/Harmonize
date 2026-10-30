@@ -45,12 +45,13 @@ public extension InheritanceProviding {
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
-        let baseName = name.baseTypeName
+        let baseNames = name.baseTypeNames
+        let matches: (String) -> Bool = { strict ? $0 == name : baseNames.isSubset(of: $0.baseTypeNames) }
 
         return inheritanceTypesNames.contains {
-            let hasDirectInheritance = strict ? $0 == name : $0.baseTypeName == baseName
+            let hasDirectInheritance = matches($0)
             let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = strict ? supertype == name : supertype?.baseTypeName == baseName
+            let hasTransitiveInheritance = supertype.map(matches) ?? false
             return hasDirectInheritance || hasTransitiveInheritance
         }
     }
@@ -92,22 +93,31 @@ public extension InheritanceProviding {
 }
 
 private extension String {
-    /// The bare type name, without module qualification or generic arguments:
+    /// The bare type names, without module qualification or generic arguments:
     /// `MyModule.BaseViewModel`, `BaseViewModel<State>`, `Container<() -> Void>.BaseViewModel`
-    /// all become `BaseViewModel`. The name is parsed as a Swift type, so generic arguments
-    /// of any shape (function types, tuples, nested generics) are handled by the parser.
-    var baseTypeName: String {
+    /// all become `["BaseViewModel"]`, and a composition `A & B` becomes `["A", "B"]`.
+    /// The name is parsed as a Swift type, so generic arguments of any shape
+    /// (function types, tuples, nested generics) are handled by the parser.
+    var baseTypeNames: Set<String> {
         var parser = Parser(self)
-        let type = TypeSyntax.parse(from: &parser)
+        return TypeSyntax.parse(from: &parser).baseTypeNames
+    }
+}
 
-        if let member = type.as(MemberTypeSyntax.self) {
-            return member.name.text
+private extension TypeSyntax {
+    var baseTypeNames: Set<String> {
+        if let composition = self.as(CompositionTypeSyntax.self) {
+            return Set(composition.elements.flatMap(\.type.baseTypeNames))
         }
 
-        if let identifier = type.as(IdentifierTypeSyntax.self) {
-            return identifier.name.text
+        if let member = self.as(MemberTypeSyntax.self) {
+            return [member.name.text]
         }
 
-        return type.trimmedDescription
+        if let identifier = self.as(IdentifierTypeSyntax.self) {
+            return [identifier.name.text]
+        }
+
+        return [trimmedDescription]
     }
 }
