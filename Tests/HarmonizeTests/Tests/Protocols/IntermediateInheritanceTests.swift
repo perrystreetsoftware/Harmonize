@@ -32,15 +32,18 @@ final class MultipleInheritanceBranchesTests: XCTestCase {
     protocol Trackable_MIB {}
     protocol Screen_MIB: Trackable_MIB {}
     open class Base_MIB {}
-    open class Middle_MIB: Base_MIB {}
-    final class Home_MIB: Middle_MIB, Screen_MIB {}
+    open class Middle_MIB: Base_MIB, Screen_MIB {}
+    final class Home_MIB: Middle_MIB {}
     """
 
-    func testTransitiveInheritanceFollowsEveryBranch() {
+    /// Both branches live on the intermediate `Middle_MIB`, so they are only
+    /// reachable by traversing every branch of a cached ancestor.
+    func testTransitiveInheritanceFollowsEveryBranchOfAnAncestor() {
         let home = Harmonize.on(source: source).classes().withName("Home_MIB")
 
         XCTAssertEqual(home.count, 1)
         home.assertTrue { $0.inherits(from: "Base_MIB", strict: true) }
+        home.assertTrue { $0.conforms(to: "Screen_MIB", strict: true) }
         home.assertTrue { $0.conforms(to: "Trackable_MIB", strict: true) }
     }
 }
