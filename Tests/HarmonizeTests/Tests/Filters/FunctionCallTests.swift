@@ -48,7 +48,14 @@ final class FunctionCallTests: XCTestCase {
         sampleCode.classes()
             .functions()
             .withName("spec")
-            .assertTrue(message: "Every beforeEach must call setUp()") { function in
+            .assertTrue(rule: Rule(
+                title: "Every beforeEach must call setUp().",
+                category: "tests",
+                rationale: "Specs share state that setUp() resets.",
+                howToFix: "Call setUp() at the start of beforeEach.",
+                badExample: "beforeEach { sut = makeSUT() }",
+                goodExample: "beforeEach { setUp(); sut = makeSUT() }"
+            )) { function in
                 function.closures(named: "beforeEach")
                     .allSatisfy { $0.invokes("setUp()") }
             }

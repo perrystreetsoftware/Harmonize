@@ -26,7 +26,15 @@ final class LintRulesExamplesTests: XCTestCase {
                 
                 return hasAssignmentToSelf.isNotEmpty
             }
-            .assertEmpty(message: "Side-effect are not allowed in initializers since they are hard to test when using test schedulers")
+            .assertEmpty(rule: Rule(
+                id: "no-side-effects-in-initializers",
+                title: "Initializers must not have side effects.",
+                category: "viewmodel",
+                rationale: "Side effects in initializers are hard to test with test schedulers.",
+                howToFix: "Move the work to a method the caller invokes after init.",
+                badExample: "init() { load() }",
+                goodExample: "init() {}\nfunc start() { load() }"
+            ))
     }
     
     // This is just an example
@@ -34,7 +42,15 @@ final class LintRulesExamplesTests: XCTestCase {
         Harmonize.on { Self.ViewModel }
             .classes()
             .withInitializers { $0.hasIfs() }
-            .assertEmpty(message: "We don't like if-else conditions in initializers. Consider cleaning up your code.")
+            .assertEmpty(rule: Rule(
+                id: "no-if-in-initializers",
+                title: "Initializers must not contain if-else conditions.",
+                category: "viewmodel",
+                rationale: "Branching in initializers hides the object's initial state.",
+                howToFix: "Compute the value before init, or inject it.",
+                badExample: "init(flag: Bool) { if flag { x = 1 } else { x = 2 } }",
+                goodExample: "init(x: Int) { self.x = x }"
+            ))
     }
     
     func testFunctionCallClosures() throws {

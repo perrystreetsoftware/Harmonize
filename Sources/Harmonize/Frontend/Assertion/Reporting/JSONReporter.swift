@@ -22,7 +22,7 @@ import Foundation
 /// A ``Reporter`` that collects violations as machine-readable entries
 /// instead of failing a test.
 ///
-/// Install it around rule evaluation and serialize the result:
+/// Install it for the rule evaluation, then serialize the result:
 ///
 /// ```swift
 /// let reporter = JSONReporter()
@@ -37,20 +37,20 @@ public final class JSONReporter: Reporter {
         public enum Kind: String, Codable {
             /// A rule violation attributed to a source declaration or file.
             case violation
-            /// A failure attributed to the assertion itself
-            /// (strict-mode empty scope, stale baseline entry, aggregate summary is *not* recorded).
+            /// A failure of the assertion itself, for example an empty scope in
+            /// strict mode or a stale baseline entry. The reporter does not record
+            /// the summary text of a violation report.
             case assertion
         }
 
         public let kind: Kind
         public let ruleId: String?
-        public let severity: Rule.Severity?
         public let name: String?
         public let file: String
         public let line: Int
         public let column: Int
         public let message: String
-        public let fixHint: String?
+        public let howToFix: String?
     }
 
     private let lock = NSLock()
@@ -72,7 +72,7 @@ public final class JSONReporter: Reporter {
         return try encoder.encode(entries)
     }
 
-    /// Removes all collected entries, e.g. between incremental check requests.
+    /// Removes all collected entries, for example between incremental runs.
     public func reset() {
         lock.lock()
         defer { lock.unlock() }
@@ -86,13 +86,12 @@ public final class JSONReporter: Reporter {
             Entry(
                 kind: .violation,
                 ruleId: violation.rule?.id,
-                severity: violation.rule?.severity,
                 name: violation.name,
                 file: violation.filePath.relativePath,
                 line: violation.line,
                 column: violation.column,
                 message: violation.message,
-                fixHint: violation.rule?.fixHint
+                howToFix: violation.rule.flatMap { $0.howToFix.isEmpty ? nil : $0.howToFix }
             )
         })
 
@@ -108,13 +107,12 @@ public final class JSONReporter: Reporter {
             Entry(
                 kind: .assertion,
                 ruleId: nil,
-                severity: nil,
                 name: nil,
                 file: location.filePath,
                 line: location.line,
                 column: location.column,
                 message: message,
-                fixHint: nil
+                howToFix: nil
             )
         ])
     }

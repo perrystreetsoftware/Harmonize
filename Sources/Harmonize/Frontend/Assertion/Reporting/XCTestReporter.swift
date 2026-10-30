@@ -71,7 +71,7 @@ public struct XCTestReporter: Reporter {
         if isRunningSwiftTesting {
             #if canImport(Testing)
             Issue.record(
-                .init(rawValue: violation.message),
+                .init(rawValue: violation.displayMessage),
                 sourceLocation: SourceLocation(
                     fileID: violation.fileID,
                     filePath: violation.filePath.relativePath,
@@ -84,7 +84,7 @@ public struct XCTestReporter: Reporter {
         }
 
         violation.filePath.relativePath.withStaticString {
-            XCTFail(violation.message, file: $0, line: UInt(violation.line))
+            XCTFail(violation.displayMessage, file: $0, line: UInt(violation.line))
         }
     }
 }

@@ -22,6 +22,30 @@ import HarmonizeSemantics
 import XCTest
 @testable import Harmonize
 
+func makeRule(
+    id: String? = nil,
+    title: String = "",
+    category: String = "",
+    disclosure: Rule.Disclosure = .progressive,
+    rationale: String = "",
+    howToFix: String = "",
+    badExample: String = "",
+    goodExample: String = "",
+    file: StaticString = #filePath
+) -> Rule {
+    Rule(
+        id: id,
+        title: title,
+        category: category,
+        disclosure: disclosure,
+        rationale: rationale,
+        howToFix: howToFix,
+        badExample: badExample,
+        goodExample: goodExample,
+        file: file
+    )
+}
+
 final class ReporterTests: XCTestCase {
     private var fileURL: URL!
     private var source: SwiftSourceCode!
@@ -49,11 +73,10 @@ final class ReporterTests: XCTestCase {
     }
 
     func testJSONReporterCollectsViolationsWithRuleMetadata() throws {
-        let rule = Rule(
+        let rule = makeRule(
             id: "viewmodels-inherit-base",
-            severity: .error,
             rationale: "ViewModels must inherit BaseViewModel.",
-            fixHint: "Declare the class as `final class BadViewModel: BaseViewModel`."
+            howToFix: "Declare the class as `final class BadViewModel: BaseViewModel`."
         )
 
         let reporter = JSONReporter()
@@ -65,37 +88,30 @@ final class ReporterTests: XCTestCase {
         let entry = try XCTUnwrap(reporter.entries.first)
         XCTAssertEqual(entry.kind, .violation)
         XCTAssertEqual(entry.ruleId, "viewmodels-inherit-base")
-        XCTAssertEqual(entry.severity, .error)
         XCTAssertEqual(entry.name, "BadViewModel")
         XCTAssertEqual(entry.file, fileURL.relativePath)
         XCTAssertEqual(entry.line, 3)
-        XCTAssertEqual(entry.message, """
-        RULE: viewmodels-inherit-base
-
-        WHY: ViewModels must inherit BaseViewModel.
-
-        HOW TO FIX: Declare the class as `final class BadViewModel: BaseViewModel`.
-        """)
-        XCTAssertEqual(entry.fixHint, "Declare the class as `final class BadViewModel: BaseViewModel`.")
+        XCTAssertEqual(entry.message, "ViewModels must inherit BaseViewModel.")
+        XCTAssertEqual(entry.howToFix, "Declare the class as `final class BadViewModel: BaseViewModel`.")
     }
 
-    func testRuleIdDefaultsToTheDeclaringFileName() throws {
-        XCTAssertEqual(Rule().id, "ReporterTests")
-        XCTAssertEqual(Rule(id: nil, description: "Some rule.").id, "ReporterTests")
-        XCTAssertEqual(Rule(id: "custom-id").id, "custom-id")
+    func testRuleIdDefaultsToTheDeclaringFileNameInKebabCase() throws {
+        XCTAssertEqual(makeRule().id, "reporter-tests")
+        XCTAssertEqual(makeRule(id: nil, title: "Some rule.").id, "reporter-tests")
+        XCTAssertEqual(makeRule(id: "custom-id").id, "custom-id")
     }
 
-    func testRuleMessageLaysOutEveryProvidedSection() throws {
-        let rule = Rule(
+    func testFormattedLaysOutEveryProvidedSection() throws {
+        let rule = makeRule(
             id: "viewmodels-inherit-base",
-            description: "ViewModels inherit from BaseViewModel.",
+            title: "ViewModels inherit from BaseViewModel.",
             rationale: "BaseViewModel owns the lifecycle handling every screen relies on.",
-            fixHint: "Declare the class as `final class MyViewModel: BaseViewModel`.",
+            howToFix: "Declare the class as `final class MyViewModel: BaseViewModel`.",
             badExample: "final class MyViewModel: ObservableObject { }",
             goodExample: "final class MyViewModel: BaseViewModel { }"
         )
 
-        XCTAssertEqual(rule.message, """
+        XCTAssertEqual(rule.formatted, """
         RULE: ViewModels inherit from BaseViewModel.
 
         WHY: BaseViewModel owns the lifecycle handling every screen relies on.
@@ -110,21 +126,20 @@ final class ReporterTests: XCTestCase {
         """)
     }
 
-    func testRuleMessageFallsBackToTheIdAndSkipsMissingSections() throws {
-        XCTAssertEqual(Rule(id: "no-foundation").message, "RULE: no-foundation")
+    func testFormattedFallsBackToTheIdAndSkipsEmptySections() throws {
+        XCTAssertEqual(makeRule(id: "no-foundation").formatted, "RULE: no-foundation")
         XCTAssertEqual(
-            Rule(id: "no-foundation", fixHint: "Remove the import.").message,
+            makeRule(id: "no-foundation", howToFix: "Remove the import.").formatted,
             "RULE: no-foundation\n\nHOW TO FIX: Remove the import."
         )
     }
 
-    func testViolationsCarryTheFullRuleMessage() throws {
-        let rule = Rule(
-            id: "viewmodels-inherit-base",
-            description: "ViewModels inherit from BaseViewModel.",
+    func testEveryAssertionCarriesTheRuleMetadata() throws {
+        let rule = makeRule(
+            id: "viewmodels-inherit-base-everywhere",
+            title: "ViewModels inherit from BaseViewModel.",
             rationale: "BaseViewModel owns the lifecycle handling.",
-            badExample: "final class MyViewModel { }",
-            goodExample: "final class MyViewModel: BaseViewModel { }"
+            howToFix: "Inherit from BaseViewModel."
         )
 
         let reporter = JSONReporter()
@@ -135,15 +150,18 @@ final class ReporterTests: XCTestCase {
         }
 
         XCTAssertEqual(reporter.entries.count, 3)
-        XCTAssertEqual(reporter.entries.map(\.message), Array(repeating: rule.message, count: 3))
+        XCTAssertEqual(reporter.entries.map(\.ruleId), Array(repeating: "viewmodels-inherit-base-everywhere", count: 3))
+        XCTAssertEqual(reporter.entries.map(\.message), Array(repeating: "BaseViewModel owns the lifecycle handling.", count: 3))
+        XCTAssertEqual(reporter.entries.map(\.howToFix), Array(repeating: "Inherit from BaseViewModel.", count: 3))
     }
 
+    // Exercises the deprecated `message:` overload on purpose.
     func testExplicitMessageWinsOverRationale() throws {
         let reporter = JSONReporter()
         HarmonizeReporting.withReporter(reporter) {
             source.classes().assertTrue(
                 message: "Custom message.",
-                rule: Rule(id: "some-rule", rationale: "Rationale.")
+                rule: makeRule(id: "some-rule", rationale: "Rationale.")
             ) { _ in false }
         }
 
@@ -167,7 +185,7 @@ final class ReporterTests: XCTestCase {
     func testJSONReporterCollectsSourceCodeAssertions() throws {
         let reporter = JSONReporter()
         HarmonizeReporting.withReporter(reporter) {
-            [source!].assertFalse(rule: Rule(id: "no-foundation")) { file in
+            [source!].assertFalse(rule: makeRule(id: "no-foundation")) { file in
                 file.imports().contains { $0.name == "Foundation" }
             }
         }
@@ -202,12 +220,22 @@ final class ReporterTests: XCTestCase {
     func testJSONSerializationRoundTrips() throws {
         let reporter = JSONReporter()
         HarmonizeReporting.withReporter(reporter) {
-            source.classes().assertEmpty(rule: Rule(id: "no-classes", severity: .warning))
+            source.classes().assertEmpty(rule: makeRule(id: "no-classes"))
         }
 
         let data = try reporter.jsonData()
         let decoded = try JSONDecoder().decode([JSONReporter.Entry].self, from: data)
         XCTAssertEqual(decoded, reporter.entries)
-        XCTAssertEqual(decoded.first?.severity, .warning)
+        XCTAssertEqual(decoded.first?.ruleId, "no-classes")
+    }
+
+    func testDisplayMessageShowsTheFullRuleWhenNoExplicitMessageWasGiven() throws {
+        let rule = makeRule(id: "r", title: "Title.", rationale: "Why.", howToFix: "Fix.", badExample: "bad", goodExample: "good")
+        let defaulted = Violation(name: "X", message: "Why.", filePath: fileURL, line: 1, column: 1, fileID: "M/X.swift", rule: rule)
+        let explicit = Violation(name: "X", message: "Custom.", filePath: fileURL, line: 1, column: 1, fileID: "M/X.swift", rule: rule)
+
+        XCTAssertEqual(defaulted.displayMessage, rule.formatted)
+        XCTAssertTrue(defaulted.displayMessage.contains("HOW TO FIX: Fix."))
+        XCTAssertEqual(explicit.displayMessage, "Custom.")
     }
 }

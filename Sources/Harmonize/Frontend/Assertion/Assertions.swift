@@ -28,8 +28,7 @@ public extension Array where Element: SyntaxNodeProviding {
     /// original source code location, if possible.
     ///
     /// - parameters:
-    ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
-    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
+    ///   - rule: The metadata of the rule. The failure text is its ``Rule/formatted`` text.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
     ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
     ///     are expected to *fail* the condition; if they pass, a "stale baseline" error is reported so the entry can be removed.
@@ -40,7 +39,6 @@ public extension Array where Element: SyntaxNodeProviding {
     ///   - condition: The test condition assertion.
     ///
     func assertTrue(
-        message: String? = nil,
         rule: Rule? = nil,
         strict: Bool = false,
         baseline: [String] = [],
@@ -50,6 +48,37 @@ public extension Array where Element: SyntaxNodeProviding {
         column: UInt = #column,
         condition: (Element) -> Bool
     ) {
+        assertTrueImpl(message: nil, rule: rule, strict: strict, baseline: baseline, fileID: fileID, file: file, line: line, column: column, condition: condition)
+    }
+
+    @available(*, deprecated, message: "Pass a `rule:` instead of `message:`. A later version will remove `message:`.")
+    func assertTrue(
+        message: String?,
+        rule: Rule? = nil,
+        strict: Bool = false,
+        baseline: [String] = [],
+        fileID: StaticString = #fileID,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        column: UInt = #column,
+        condition: (Element) -> Bool
+    ) {
+        assertTrueImpl(message: message, rule: rule, strict: strict, baseline: baseline, fileID: fileID, file: file, line: line, column: column, condition: condition)
+    }
+
+    private func assertTrueImpl(
+        message: String?,
+        rule: Rule?,
+        strict: Bool,
+        baseline: [String],
+        fileID: StaticString,
+        file: StaticString,
+        line: UInt,
+        column: UInt,
+        condition: (Element) -> Bool
+    ) {
+        let rule = registerRule(rule, definedIn: file)
+
         if strict && isEmpty {
             reportInline(
                 message: "Expected true but got empty collection instead.",
@@ -95,8 +124,7 @@ public extension Array where Element: SyntaxNodeProviding {
     /// original source code location, if possible.
     ///
     /// - parameters:
-    ///   - message: An optional custom message to display in case of failure. If not provided, a default message will be used.
-    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
+    ///   - rule: The metadata of the rule. The failure text is its ``Rule/formatted`` text.
     ///   - strict: Flag to indicate if the test should run on strict mode, which will fail on empty collection. False by default.
     ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
     ///     are expected to *pass* the condition (i.e. return true); if they return false, a "stale baseline" error is reported.
@@ -107,7 +135,6 @@ public extension Array where Element: SyntaxNodeProviding {
     ///   - condition: A closure that takes an element and returns a `Bool` indicating if the condition is met.
     ///
     func assertFalse(
-        message: String? = nil,
         rule: Rule? = nil,
         strict: Bool = false,
         baseline: [String] = [],
@@ -117,6 +144,37 @@ public extension Array where Element: SyntaxNodeProviding {
         column: UInt = #column,
         condition: (Element) -> Bool
     ) {
+        assertFalseImpl(message: nil, rule: rule, strict: strict, baseline: baseline, fileID: fileID, file: file, line: line, column: column, condition: condition)
+    }
+
+    @available(*, deprecated, message: "Pass a `rule:` instead of `message:`. A later version will remove `message:`.")
+    func assertFalse(
+        message: String?,
+        rule: Rule? = nil,
+        strict: Bool = false,
+        baseline: [String] = [],
+        fileID: StaticString = #fileID,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        column: UInt = #column,
+        condition: (Element) -> Bool
+    ) {
+        assertFalseImpl(message: message, rule: rule, strict: strict, baseline: baseline, fileID: fileID, file: file, line: line, column: column, condition: condition)
+    }
+
+    private func assertFalseImpl(
+        message: String?,
+        rule: Rule?,
+        strict: Bool,
+        baseline: [String],
+        fileID: StaticString,
+        file: StaticString,
+        line: UInt,
+        column: UInt,
+        condition: (Element) -> Bool
+    ) {
+        let rule = registerRule(rule, definedIn: file)
+
         if strict && isEmpty {
             reportInline(
                 message: "Expected false but got empty collection instead.",
@@ -161,8 +219,7 @@ public extension Array where Element: SyntaxNodeProviding {
     /// Asserts that the array is empty.
     ///
     /// - parameters:
-    ///   - message: An optional custom message to display on failure. If not provided, a default message will be used.
-    ///   - rule: Optional metadata describing the rule. When `message` is nil, the rule's ``Rule/message`` is used as the failure text.
+    ///   - rule: The metadata of the rule. The failure text is its ``Rule/formatted`` text.
     ///   - baseline: An array of declaration names or filenames that are known violations. Elements matching a baseline entry
     ///     are expected to be present and are excluded from the empty check.
     ///   - fileID: The file ID to which the assertion should be attributed.
@@ -171,7 +228,6 @@ public extension Array where Element: SyntaxNodeProviding {
     ///   - column: The column number to which the assertion should be attributed.
     /// - warning: This method is experimental and subject to change.
     func assertEmpty(
-        message: String? = nil,
         rule: Rule? = nil,
         baseline: [String] = [],
         fileID: StaticString = #fileID,
@@ -179,6 +235,33 @@ public extension Array where Element: SyntaxNodeProviding {
         line: UInt = #line,
         column: UInt = #column
     ) {
+        assertEmptyImpl(message: nil, rule: rule, baseline: baseline, fileID: fileID, file: file, line: line, column: column)
+    }
+
+    @available(*, deprecated, message: "Pass a `rule:` instead of `message:`. A later version will remove `message:`.")
+    func assertEmpty(
+        message: String?,
+        rule: Rule? = nil,
+        baseline: [String] = [],
+        fileID: StaticString = #fileID,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
+        assertEmptyImpl(message: message, rule: rule, baseline: baseline, fileID: fileID, file: file, line: line, column: column)
+    }
+
+    private func assertEmptyImpl(
+        message: String?,
+        rule: Rule?,
+        baseline: [String],
+        fileID: StaticString,
+        file: StaticString,
+        line: UInt,
+        column: UInt
+    ) {
+        let rule = registerRule(rule, definedIn: file)
+
         let nonBaselineElements = filter { !isInBaseline($0, baseline: baseline) }
 
         guard !nonBaselineElements.isEmpty else {
@@ -300,7 +383,7 @@ public extension Array where Element: SyntaxNodeProviding {
     ) {
         guard elements.isNotEmpty else { return }
 
-        let message = additionalMessage ?? rule?.message
+        let message = additionalMessage ?? rule?.nonEmptyRationale
         var codeIssues: [CodeIssue] = []
 
         for element in elements {
@@ -313,7 +396,7 @@ public extension Array where Element: SyntaxNodeProviding {
             "(\($0.fileId))\n\($0.name):\($0.line):\($0.column)"
         }.joined(separator: "\n\n")
 
-        let testName = message ?? assertionMessage
+        let testName = additionalMessage ?? rule?.formatted ?? assertionMessage
         let summary = """
         \(testName)
 

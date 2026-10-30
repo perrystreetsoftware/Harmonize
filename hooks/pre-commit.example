@@ -1,0 +1,47 @@
+#!/bin/bash
+#
+# Harmonize pre-commit hook template.
+#
+# Regenerates the agent skill when a rule file is in the commit. It runs the
+# built generator binary directly. It does not start SwiftPM and it does not
+# wait for a build. If the binary does not exist, it shows a warning and permits
+# the commit. Add a CI check that regenerates the skill and compares the result.
+# The CI check catches the commits that skipped the hook.
+#
+# Install: copy next to your other hooks, or append the block to your existing
+# pre-commit hook. Set the two variables for your project.
+#
+# Build the generator once. The first build takes some minutes. Later builds take seconds:
+#   swift package --package-path "$RULES_PACKAGE" \
+#     --allow-writing-to-package-directory --allow-writing-to-directory "$SKILLS_DIR" harmonize-skills
+
+RULES_PACKAGE="Rules"            # the package that contains your rule tests
+SKILLS_DIR=".agents/skills"      # must match `skills.output` in .harmonize.yaml
+SKILL_NAME="harmonize"           # must match `skills.name` in .harmonize.yaml
+
+if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.swift" | grep -q .; then
+  SKILLS_TOOL=""
+  for candidate in \
+    "$RULES_PACKAGE/.build/out/Products/Debug/HarmonizeSkills" \
+    "$RULES_PACKAGE/.build/debug/HarmonizeSkills" \
+    "$RULES_PACKAGE"/.build/*-apple-macosx/debug/HarmonizeSkills; do
+    if [ -x "$candidate" ]; then
+      SKILLS_TOOL="$candidate"
+      break
+    fi
+  done
+
+  if [ -n "$SKILLS_TOOL" ]; then
+    if "$SKILLS_TOOL" --package-dir "$RULES_PACKAGE"; then
+      git add -A -- "$SKILLS_DIR/$SKILL_NAME"
+    else
+      echo "pre-commit: harmonize-skills failed. Fix the rule metadata and commit again." >&2
+      exit 1
+    fi
+  else
+    echo "pre-commit: WARNING: the harmonize-skills tool does not exist. The skill was not regenerated." >&2
+    echo "pre-commit: build it once (see the comment at the top of this hook)." >&2
+  fi
+fi
+
+exit 0
