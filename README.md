@@ -128,6 +128,13 @@ final class MyViewModel: ObservableObject { }
 final class MyViewModel: BaseViewModel { }
 ```
 
+### Run the rules
+
+The rules are unit tests. Run them with `swift test` or with `xcodebuild test`:
+
+- A standalone rules package: `swift test --package-path <rules-package>`.
+- Rules in an Xcode workspace: `xcodebuild test -scheme <scheme> -destination 'platform=macOS'`.
+
 ## Installation
 
 ### Swift Package Manager (SPM)

@@ -4,30 +4,31 @@
 #
 # Regenerates the agent skill when a rule file is in the commit. It runs the
 # built generator binary directly. It does not start SwiftPM and it does not
-# wait for a build. If the binary does not exist, it shows a warning and permits
+# wait for a build. If the binary does not exist, it shows a warning and allows
 # the commit. Add a CI check that regenerates the skill and compares the result.
 # The CI check catches the commits that skipped the hook.
 #
 # Install: copy next to your other hooks, or append the block to your existing
-# pre-commit hook. Set the two variables for your project.
+# pre-commit hook. Set the variables for your project.
 #
-# Build the generator once. The first build takes some minutes. Later builds take seconds:
+# You need to build the generator manually for the first time from the repository root. The first build takes some minutes. Later builds take seconds:
 #   swift package --package-path "$RULES_PACKAGE" \
 #     --allow-writing-to-package-directory --allow-writing-to-directory "$SKILLS_DIR" harmonize-skills
 
-RULES_PACKAGE="Rules"            # the package that contains your rule tests
-SKILLS_DIR=".agents/skills"      # must match `skills.output` in .harmonize.yaml
-SKILL_NAME="harmonize"           # must match `skills.name` in .harmonize.yaml
+RULES_PACKAGE="Rules"              # the package that contains your rule tests
+HARMONIZE_CONFIG=".harmonize.yaml"  # the config; set a subfolder path in a monorepo, for example "iOS/.harmonize.yaml"
+SKILLS_DIR=".agents/skills"        # must match `skills.output` in the config, from the repository root
+SKILL_NAME="harmonize"             # must match `skills.name` in the config
 
 if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.swift" | grep -q .; then
-  # SwiftPM versions build the plugin tool into different folders, for example
+  # SwiftPM versions build the plugin tool into different folders depending on the version, for example
   # .build/out/Products/Debug/HarmonizeSkills or .build/plugins/tools/debug/HarmonizeSkills-tool.
   SKILLS_TOOL=$(find "$RULES_PACKAGE/.build" -maxdepth 6 -type f -perm -u+x \
     \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1)
 
   if [ -n "$SKILLS_TOOL" ]; then
     SNAPSHOT=$(mktemp -d "${TMPDIR:-/tmp}/harmonize-skills.XXXXXX")
-    git ls-files -z -- .harmonize.yaml "$RULES_PACKAGE/Tests" | git checkout-index -z --stdin --prefix="$SNAPSHOT/"
+    git ls-files -z -- "$HARMONIZE_CONFIG" "$RULES_PACKAGE/Tests" | git checkout-index -z --stdin --prefix="$SNAPSHOT/"
 
     if "$SKILLS_TOOL" --package-dir "$SNAPSHOT/$RULES_PACKAGE" && [ -d "$SNAPSHOT/$SKILLS_DIR/$SKILL_NAME" ]; then
       rm -rf "$SKILLS_DIR/$SKILL_NAME"
@@ -45,7 +46,8 @@ if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.s
     fi
   else
     echo "pre-commit: WARNING: the harmonize-skills tool does not exist. The skill was not regenerated." >&2
-    echo "pre-commit: build it once (see the comment at the top of this hook)." >&2
+    echo "pre-commit: you need to build the generator manually for the first time from the repository root. The first build takes some minutes:" >&2
+    echo "  swift package --package-path $RULES_PACKAGE --allow-writing-to-package-directory --allow-writing-to-directory $SKILLS_DIR harmonize-skills" >&2
   fi
 fi
 

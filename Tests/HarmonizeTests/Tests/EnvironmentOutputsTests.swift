@@ -170,6 +170,49 @@ final class EnvironmentOutputsTests: XCTestCase {
         XCTAssertEqual(files, ["violations-\(ProcessInfo.processInfo.processIdentifier).json"])
     }
 
+    func testProcessesOfOneRunAddTheirEntriesToOneFile() throws {
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EnvironmentOutputsTests-Run-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: outputDirectory) }
+        let fileURL = outputDirectory.appendingPathComponent("violations.json")
+        let environment = [EnvironmentOutputs.violationsFileKey: fileURL.path]
+
+        let previousViolationsReporter = EnvironmentOutputs.violationsReporter
+        defer { EnvironmentOutputs.violationsReporter = previousViolationsReporter }
+
+        func report(_ id: String) -> JSONReporter {
+            let reporter = JSONReporter()
+            HarmonizeReporting.withReporter(reporter) {
+                source.classes().assertTrue(rule: makeRule(id: id)) { _ in false }
+            }
+            return reporter
+        }
+        func ids() throws -> [String?] {
+            try JSONDecoder().decode([JSONReporter.Entry].self, from: Data(contentsOf: fileURL)).map(\.ruleId)
+        }
+
+        // First process of run A.
+        EnvironmentOutputs.violationsReporter = report("first")
+        EnvironmentOutputs.writeOutputs(environment: environment, runIdentifier: "A")
+        XCTAssertEqual(try ids(), ["first"])
+
+        // Second process of run A: a clean one. The entries of the first stay.
+        EnvironmentOutputs.violationsReporter = nil
+        EnvironmentOutputs.writeOutputs(environment: environment, runIdentifier: "A")
+        XCTAssertEqual(try ids(), ["first"])
+
+        // Third process of run A adds its entries.
+        EnvironmentOutputs.violationsReporter = report("third")
+        EnvironmentOutputs.writeOutputs(environment: environment, runIdentifier: "A")
+        XCTAssertEqual(try ids(), ["first", "third"])
+
+        // A later run replaces the file.
+        EnvironmentOutputs.violationsReporter = report("later")
+        EnvironmentOutputs.writeOutputs(environment: environment, runIdentifier: "B")
+        XCTAssertEqual(try ids(), ["later"])
+        XCTAssertEqual(try String(contentsOf: outputDirectory.appendingPathComponent("violations.json.run"), encoding: .utf8), "B")
+    }
+
     func testWriteOutputsDoesNothingWithoutTheVariable() throws {
         let outputDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("EnvironmentOutputsTests-None-\(UUID().uuidString)")
