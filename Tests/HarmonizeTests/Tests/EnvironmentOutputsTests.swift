@@ -213,6 +213,25 @@ final class EnvironmentOutputsTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: outputDirectory.appendingPathComponent("violations.json.run"), encoding: .utf8), "B")
     }
 
+    func testTheSingleFileMergeLocksEvenWhenTheDirectoryIsNew() throws {
+        let outputDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("EnvironmentOutputsTests-Lock-\(UUID().uuidString)")
+            .appendingPathComponent("nested")
+        defer { try? FileManager.default.removeItem(at: outputDirectory.deletingLastPathComponent()) }
+        let fileURL = outputDirectory.appendingPathComponent("violations.json")
+        let environment = [EnvironmentOutputs.violationsFileKey: fileURL.path]
+
+        let previousViolationsReporter = EnvironmentOutputs.violationsReporter
+        defer { EnvironmentOutputs.violationsReporter = previousViolationsReporter }
+        EnvironmentOutputs.violationsReporter = nil
+
+        EnvironmentOutputs.writeOutputs(environment: environment, runIdentifier: "A")
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
+        // The lock file exists only when the lock was taken before the merge.
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path + ".lock"))
+    }
+
     func testWriteOutputsDoesNothingWithoutTheVariable() throws {
         let outputDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("EnvironmentOutputsTests-None-\(UUID().uuidString)")

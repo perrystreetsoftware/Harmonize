@@ -28,7 +28,7 @@ echo "exit code: $?"
 - To run one rule, add `--filter <RuleTestClassName>` to the `swift test` command. This does not work for Quick specs on macOS. A Quick spec is a rule class that extends `QuickSpec`. With Quick specs, `--filter` selects no tests, and `swift test --parallel` skips them without an error. Build the tests with `swift build --build-tests`, find the bundle in `swift build --show-bin-path`, and run `xcrun xctest -XCTest <Module>.<RuleTestClassName> <bundle>`. With `xcodebuild`, use `-only-testing:<Module>/<RuleTestClassName>`.
 - With `xcodebuild`, name the variable `TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`. The prefix makes the variable reach the test process.
 - Always pass an absolute path for the output file.
-- One run can have several test processes, for example Swift Testing tests or parallel workers. They all add their entries to the one file. To get one file per process instead, end the path with a slash: `HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/"`. Each process then writes its own `violations-<pid>.json` file. Read all of them.
+- One run can have several test processes, for example Swift Testing tests or parallel workers. They all add their entries to the one file. Delete the output folder before each run, as the command above does. Harmonize recognizes the processes of one run by their parent process, so a file from an earlier run can keep old entries. To get one file per process instead, end the path with a slash: `HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/"`. Each process then writes its own `violations-<pid>.json` file. Read all of them.
 - Add `.harmonize-out/` to `.gitignore`.
 - The test run fails on violations as usual. Harmonize writes the JSON file when the process exits.
 

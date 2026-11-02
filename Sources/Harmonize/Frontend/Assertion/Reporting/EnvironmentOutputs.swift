@@ -35,7 +35,10 @@ import Darwin
 ///   a second process, and `swift test --parallel` starts several workers.
 ///   The processes of one run share a parent process. Harmonize records that
 ///   parent in `<path>.run` and adds the entries of each process to the file.
-///   A process from a different run replaces the file.
+///   A process from a different run replaces the file. Delete the file before
+///   a run. The parent is a heuristic: a parent that stays alive across runs,
+///   for example an interactive shell that starts the test bundle directly,
+///   keeps its id, and a stale file then keeps old entries.
 /// - `HARMONIZE_VIOLATIONS_FILE=<directory>/`: when the path ends with a
 ///   slash, each test process writes its own file,
 ///   `<directory>/violations-<pid>.json`. Use this form when you want one
@@ -151,12 +154,16 @@ internal enum EnvironmentOutputs {
         return url.appendingPathComponent("violations-\(ProcessInfo.processInfo.processIdentifier).json")
     }
 
+    private static func createDirectory(for url: URL) throws {
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+    }
+
     private static func write(_ data: Data, to url: URL, label: String) {
         do {
-            try FileManager.default.createDirectory(
-                at: url.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
+            try createDirectory(for: url)
             try data.write(to: url)
         } catch {
             FileHandle.standardError.write(
