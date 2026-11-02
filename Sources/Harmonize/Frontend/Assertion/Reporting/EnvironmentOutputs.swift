@@ -107,7 +107,9 @@ internal enum EnvironmentOutputs {
         }
 
         // One file for the whole run. Another process of the same run may have
-        // written it already, so merge under a lock.
+        // written it already, so merge under a lock. The lock file needs the
+        // directory, so create the directory first.
+        try? createDirectory(for: url)
         let markerURL = URL(fileURLWithPath: path + ".run")
         withFileLock(at: path + ".lock") {
             let sameRun = (try? String(contentsOf: markerURL, encoding: .utf8)) == runIdentifier
