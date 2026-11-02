@@ -25,10 +25,10 @@ swift test --package-path <rules-package> > .harmonize-out/test.log 2>&1
 echo "exit code: $?"
 ```
 
-- To run one rule, add `--filter <RuleTestClassName>` to the `swift test` command.
+- To run one rule, add `--filter <RuleTestClassName>` to the `swift test` command. This does not work for Quick specs on macOS. A Quick spec is a rule class that extends `QuickSpec`. With Quick specs, `--filter` selects no tests, and `swift test --parallel` skips them without an error. Build the tests with `swift build --build-tests`, find the bundle in `swift build --show-bin-path`, and run `xcrun xctest -XCTest <Module>.<RuleTestClassName> <bundle>`. With `xcodebuild`, use `-only-testing:<Module>/<RuleTestClassName>`.
 - With `xcodebuild`, name the variable `TEST_RUNNER_HARMONIZE_VIOLATIONS_FILE`. The prefix makes the variable reach the test process.
 - Always pass an absolute path for the output file.
-- When the test workers run in parallel (`swift test --parallel`, or Xcode parallel testing), end the path with a slash: `HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/"`. Each worker then writes its own `violations-<pid>.json` file into that folder. Read all of them.
+- One run can have several test processes, for example Swift Testing tests or parallel workers. They all add their entries to the one file. Delete the output folder before each run, as the command above does. Harmonize recognizes the processes of one run by their parent process, so a file from an earlier run can keep old entries. To get one file per process instead, end the path with a slash: `HARMONIZE_VIOLATIONS_FILE="$PWD/.harmonize-out/"`. Each process then writes its own `violations-<pid>.json` file. Read all of them.
 - Add `.harmonize-out/` to `.gitignore`.
 - The test run fails on violations as usual. Harmonize writes the JSON file when the process exits.
 
@@ -37,6 +37,7 @@ echo "exit code: $?"
 Read the log only when this section tells you to.
 
 - Exit code 0: all rules pass. `violations.json` contains `[]`.
+- The log says `Executed 0 tests` and has no `Test run with ...` line from Swift Testing: no rule ran. The filter matched no test, or the Quick specs did not run. Do not treat the result as a pass. Run the command again without `--filter` and without `--parallel`, or run the bundle as described above.
 - Exit code not 0, and `violations.json` has entries: read the file. Each entry has:
   - `ruleId` and `title`: the rule that failed.
   - `file`, `line`, `column`, `name`: the location of the violating declaration.
@@ -50,7 +51,7 @@ Read the log only when this section tells you to.
 1. For each violation, apply `howToFix`. If you need the examples, open the rule page of the generated skill: `references/*/<ruleId>.md`. If the project has no generated skill, open the rule source. Its file name is the rule id in PascalCase, unless the rule sets an explicit `id`.
 2. Fix the production code. Change the rule only when the task is to change the rule.
 3. Do not hide a new violation with a `baseline` entry. Use the baseline only for violations that existed before the rule.
-4. Run the fixed rule alone with `--filter <RuleName>`. Then run the full suite.
+4. Run the fixed rule alone. Use `--filter <RuleName>`, or the bundle command for a Quick spec. Then run the full suite.
 
 ## Learn the rules before you write code
 

@@ -128,6 +128,13 @@ final class MyViewModel: ObservableObject { }
 final class MyViewModel: BaseViewModel { }
 ```
 
+### Run the rules
+
+The rules are unit tests. Run them with `swift test` or with `xcodebuild test`:
+
+- A standalone rules package: `swift test --package-path <rules-package>`.
+- Rules in an Xcode workspace: `xcodebuild test -scheme <scheme> -destination 'platform=macOS'`.
+
 ## Installation
 
 ### Swift Package Manager (SPM)
@@ -148,7 +155,7 @@ Or, manually add it to your `Package.swift` file:
 The Harmonize integration with AI agents is currently in beta:
 
 ```swift
-.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", exact: "2.0.0-beta.1"),
+.package(url: "https://github.com/perrystreetsoftware/Harmonize.git", exact: "2.0.0-beta.2"),
 ```
 
 You can optionally create a dedicated Swift package for your Harmonize lint rules to separate them from the rest of the unit tests.
@@ -191,7 +198,7 @@ jobs:
 
 Harmonize becomes even more powerful when you integrate it with your AI agents. Your AI agents can run the lint rules after every task, detect the violations, and correct them. Harmonize can also generate a skill for your architecture from your lint rules. AI agents read it before they implement a task.
 
-This integration is available in version `2.0.0-beta.1`. See [Installation](#installation).
+This integration is available in version `2.0.0-beta.2`. See [Installation](#installation).
 
 ### Run the rules after a task
 

@@ -51,7 +51,7 @@ Pass `rule:` to `assertTrue`, `assertFalse` or `assertEmpty`. The `message:` par
 | `badExample`  | A short code sample that violates the rule.                              |
 | `goodExample` | A short code sample that obeys the rule.                                 |
 
-Each rule becomes documentation. The `harmonize-skills` plugin reads the declarations from the source code and generates the `harmonize` agent skill: one reference page per layer and one per rule. For this reason, every value must be a literal: a string literal or an enum case. Do not use `Self.sharedText` or string interpolation. If you do, the generator stops with an error at that line.
+Each rule becomes documentation. The `harmonize-skills` plugin reads the declarations from the source code and generates the `harmonize` agent skill: one reference page per layer and one per rule. For this reason, every value must be a literal: a string literal or an enum case. Do not use `Self.sharedText` or string interpolation. If you do, the generator stops with an error at that line. Put dynamic detail, such as the names of the declarations that a check found, in the test description or in the violation names, not in the `Rule`.
 
 ### Category vocabulary
 
