@@ -49,7 +49,7 @@ public struct Variable: Declaration, SyntaxNodeProviding {
     }
     
     public var isComputed: Bool {
-        getter != nil
+        getter != nil || hasGetAccessor()
     }
     
     public var isStored: Bool {
