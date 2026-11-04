@@ -31,7 +31,7 @@ internal class DeclarationsCache {
     private var typeInheritanceCache: [String: [String]] = [:]
 
     /// Reverse index of `typeInheritanceCache`: maps a subtype to its direct
-    /// supertypes, so `supertype(of:)` resolves by dictionary lookup instead
+    /// supertypes, so `supertypes(of:)` resolves by dictionary lookup instead
     /// of scanning every entry.
     private var supertypesBySubtype: [String: [String]] = [:]
 
@@ -70,9 +70,19 @@ internal class DeclarationsCache {
         }
     }
 
-    func supertype(of subtype: String) -> String? {
+    /// Returns every known ancestor of `subtype`: direct supertypes, their supertypes, and so on,
+    /// following all branches of multiple inheritance. Cycles are ignored.
+    func supertypes(of subtype: String) -> Set<String> {
         locking {
-            findSupertype(of: subtype, visited: [])
+            var ancestors = Set<String>()
+            var pending = supertypesBySubtype[subtype, default: []]
+
+            while let type = pending.popLast() {
+                guard type != subtype, ancestors.insert(type).inserted else { continue }
+                pending.append(contentsOf: supertypesBySubtype[type, default: []])
+            }
+
+            return ancestors
         }
     }
 
@@ -95,63 +105,6 @@ internal class DeclarationsCache {
             supertypes.append(type)
         }
         supertypesBySubtype[typeName] = supertypes
-    }
-
-    /// Must be called while holding `lock`.
-    private func findSupertype(
-        of subtype: String,
-        visited: Set<String>
-    ) -> String? {
-        guard !visited.contains(subtype) else { return nil }
-
-        let matches = supertypesBySubtype[subtype, default: []]
-
-        guard let directSupertype = matches.first else {
-            return nil
-        }
-
-        var visited = visited
-        visited.insert(subtype)
-
-        if matches.count == 1 {
-            let resolved = findSupertype(
-                of: directSupertype,
-                visited: visited
-            )
-
-            return resolvedSupertype(
-                resolved ?? directSupertype,
-                visited: visited
-            )
-        }
-
-        let firstSupertype = matches.first { type in
-            typeInheritanceCache[type] != nil
-        }
-
-        guard let firstSupertype else {
-            return resolvedSupertype(
-                directSupertype,
-                visited: visited
-            )
-        }
-
-        let resolved = findSupertype(
-            of: firstSupertype,
-            visited: visited
-        )
-
-        return resolvedSupertype(
-            resolved ?? firstSupertype,
-            visited: visited
-        )
-    }
-
-    private func resolvedSupertype(
-        _ candidate: String,
-        visited: Set<String>
-    ) -> String? {
-        visited.contains(candidate) ? nil : candidate
     }
 
     private func locking<T>(f: () -> T) -> T {

@@ -66,8 +66,17 @@ final class ProtocolsConformanceTests: XCTestCase {
     func testClassesDirectInheritance() throws {
         Harmonize.on { protocolsSample }
             .classes()
-            .inheriting(from: "CoordinatorThrows")
+            .inheriting(from: "CoordinatorThrows", includeTransitiveInheritance: false)
             .assertTrue { $0.name == "FooCoordinator" }
+    }
+
+    func testClassesTransitiveInheritanceThroughSuperclass() throws {
+        let classes = Harmonize.on { protocolsSample }
+            .classes()
+            .inheriting(from: "CoordinatorThrows")
+            .map(\.name)
+
+        XCTAssertEqual(classes, ["FooCoordinator", "MachineCoordinator"])
     }
 
     func testMultiAndTransitiveInheritance() throws {
