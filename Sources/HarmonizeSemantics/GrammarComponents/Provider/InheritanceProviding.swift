@@ -43,10 +43,12 @@ public extension InheritanceProviding {
     ///   - strict: If `true`, the check is strict and requires an exact match; otherwise, it allows for inheritance from superclasses. Default is `false`.
     /// - Returns: `true` if the declaration inherits from the given class or object name, `false` otherwise.
     func inherits(from name: String, includeTransitiveInheritance: Bool = true, strict: Bool = false) -> Bool {        
-        inheritanceTypesNames.contains {
-            let hasDirectInheritance = strict ? $0 == name : $0.contains(name)
-            let supertype = includeTransitiveInheritance ? DeclarationsCache.shared.supertype(of: $0) : nil
-            let hasTransitiveInheritance = strict ? supertype == name : (supertype?.contains(name) ?? false)
+        let matches: (String) -> Bool = { strict ? $0 == name : $0.contains(name) }
+
+        return inheritanceTypesNames.contains {
+            let hasDirectInheritance = matches($0)
+            let supertypes = includeTransitiveInheritance ? DeclarationsCache.shared.supertypes(of: $0) : []
+            let hasTransitiveInheritance = supertypes.contains(where: matches)
             return hasDirectInheritance || hasTransitiveInheritance
         }
     }
