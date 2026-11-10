@@ -191,6 +191,13 @@ final class VariablesTests: XCTestCase {
         XCTAssertEqual(getter, ["9"])
     }
     
+    func testComputedVariablesIncludeExplicitGetAccessors() throws {
+        let variables = visitor.variables.filter { ($0.parent as? Class)?.name == "Properties" }
+
+        XCTAssertEqual(variables.filter(\.isComputed).map(\.name), ["example11", "example13"])
+        XCTAssertFalse(variables.filter(\.isStored).map(\.name).contains("example13"))
+    }
+    
     func testParseVariablesAccessorsModifier() throws {
         let variables = visitor.variables
         let accessors = variables.flatMap { $0.accessors }.map { $0.modifier }
