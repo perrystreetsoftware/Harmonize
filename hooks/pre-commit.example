@@ -3,28 +3,63 @@
 # Harmonize pre-commit hook template.
 #
 # Regenerates the agent skill when a rule file is in the commit. It runs the
-# built generator binary directly. It does not start SwiftPM and it does not
-# wait for a build. If the binary does not exist, it shows a warning and allows
-# the commit. Add a CI check that regenerates the skill and compares the result.
-# The CI check catches the commits that skipped the hook.
+# generator binary directly. It does not start SwiftPM and it does not wait for
+# a build. Add a CI check that regenerates the skill and compares the result.
+# The CI check finds the commits that did not run the hook.
 #
-# Install: copy next to your other hooks, or append the block to your existing
-# pre-commit hook. Set the variables for your project.
+# The hook uses the first generator that it finds:
+#   1. The prebuilt generator of the Harmonize release that you set below. It runs only on Apple silicon Macs.
+#      The hook downloads it one time and checks its SHA-256 checksum. Then the hook keeps it in the git folder.
+#      Later commits run it in less than one second.
+#   2. A generator that SwiftPM built in the rules package, for example when you ran the plugin.
+# If the hook finds no generator, it shows a warning and allows the commit.
 #
-# You need to build the generator manually for the first time from the repository root. The first build takes some minutes. Later builds take seconds:
-#   swift package --package-path "$RULES_PACKAGE" \
-#     --allow-writing-to-package-directory --allow-writing-to-directory "$SKILLS_DIR" harmonize-skills
+# To install the hook, copy it next to your other hooks. Or add the block to your
+# pre-commit hook. Then set the variables for your project.
 
 RULES_PACKAGE="Rules"              # the package that contains your rule tests
 HARMONIZE_CONFIG=".harmonize.yaml"  # the config; set a subfolder path in a monorepo, for example "iOS/.harmonize.yaml"
 SKILLS_DIR=".agents/skills"        # must match `skills.output` in the config, from the repository root
 SKILL_NAME="harmonize"             # must match `skills.name` in the config
+HARMONIZE_VERSION=""               # the Harmonize release tag that your rules package uses, for example "2.0.0-beta.3"
+HARMONIZE_SKILLS_SHA256=""         # the checksum in harmonize-skills-macos-arm64.tar.gz.sha256 of that release.
+                                   # If it is empty, the hook does not use the prebuilt generator.
+
+# Prints the path of the prebuilt generator. If the generator is not in the git folder, the function downloads it.
+prebuilt_skills_tool() {
+  [ -n "$HARMONIZE_VERSION" ] && [ -n "$HARMONIZE_SKILLS_SHA256" ] && [ "$(uname -sm)" = "Darwin arm64" ] || return 1
+  local asset="harmonize-skills-macos-arm64.tar.gz"
+  local cache_root cache tmp
+  cache_root="$(cd "$(git rev-parse --git-common-dir)" && pwd)/harmonize-skills"
+  cache="$cache_root/$HARMONIZE_SKILLS_SHA256"
+
+  if [ ! -x "$cache/harmonize-skills" ]; then
+    mkdir -p "$cache_root" || return 1
+    tmp=$(mktemp -d "$cache_root/.download.XXXXXX") || return 1
+    if curl -fsSL --connect-timeout 5 --max-time 60 -o "$tmp/$asset" \
+         "https://github.com/perrystreetsoftware/Harmonize/releases/download/$HARMONIZE_VERSION/$asset" \
+       && echo "$HARMONIZE_SKILLS_SHA256  $tmp/$asset" | shasum -a 256 -c -s \
+       && tar -xzf "$tmp/$asset" -C "$tmp" harmonize-skills \
+       && mkdir -p "$cache" \
+       && mv -f "$tmp/harmonize-skills" "$cache/harmonize-skills"; then
+      rm -rf "$tmp"
+    else
+      rm -rf "$tmp"
+      echo "pre-commit: WARNING: the hook could not download the harmonize-skills $HARMONIZE_VERSION generator, or its checksum is not HARMONIZE_SKILLS_SHA256." >&2
+      return 1
+    fi
+  fi
+  echo "$cache/harmonize-skills"
+}
 
 if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.swift" | grep -q .; then
-  # SwiftPM versions build the plugin tool into different folders depending on the version, for example
-  # .build/out/Products/Debug/HarmonizeSkills or .build/plugins/tools/debug/HarmonizeSkills-tool.
-  SKILLS_TOOL=$(find "$RULES_PACKAGE/.build" -maxdepth 6 -type f -perm -u+x \
-    \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1)
+  SKILLS_TOOL=$(prebuilt_skills_tool) || true
+  if [ -z "$SKILLS_TOOL" ]; then
+    # Different SwiftPM versions build the plugin tool into different folders, for example
+    # .build/out/Products/Debug/HarmonizeSkills or .build/plugins/tools/debug/HarmonizeSkills-tool.
+    SKILLS_TOOL=$(find "$RULES_PACKAGE/.build" -maxdepth 6 -type f -perm -u+x \
+      \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1) || true
+  fi
 
   if [ -n "$SKILLS_TOOL" ]; then
     SNAPSHOT=$(mktemp -d "${TMPDIR:-/tmp}/harmonize-skills.XXXXXX")
@@ -37,7 +72,7 @@ if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.s
       rm -rf "$SNAPSHOT"
       git add -A -- "$SKILLS_DIR/$SKILL_NAME"
       if ! git diff --quiet -- "$RULES_PACKAGE/Tests" || git ls-files --others --exclude-standard -- "$RULES_PACKAGE/Tests" | grep -q .; then
-        echo "pre-commit: some rule files have unstaged changes. The skill was generated from the staged versions." >&2
+        echo "pre-commit: some rule files have unstaged changes. The hook generated the skill from the staged versions." >&2
       fi
     else
       rm -rf "$SNAPSHOT"
@@ -45,8 +80,8 @@ if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.s
       exit 1
     fi
   else
-    echo "pre-commit: WARNING: the harmonize-skills tool does not exist. The skill was not regenerated." >&2
-    echo "pre-commit: you need to build the generator manually for the first time from the repository root. The first build takes some minutes:" >&2
+    echo "pre-commit: WARNING: the harmonize-skills tool does not exist. The hook did not regenerate the skill." >&2
+    echo "pre-commit: set HARMONIZE_VERSION and HARMONIZE_SKILLS_SHA256 in the hook, or build the generator from the repository root. The first build takes some minutes:" >&2
     echo "  swift package --package-path $RULES_PACKAGE --allow-writing-to-package-directory --allow-writing-to-directory $SKILLS_DIR harmonize-skills" >&2
   fi
 fi

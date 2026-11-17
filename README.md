@@ -296,7 +296,7 @@ The first run builds the generator. This takes some minutes. Later runs only tak
 
 To keep the generated skill up to date with your lint rules, use these two mechanisms:
 
-- A pre-commit hook regenerates the skill when a commit contains a rule file. Copy [`hooks/pre-commit.example`](hooks/pre-commit.example) and set its variables. The hook runs the built generator binary directly, so it takes less than one second. If the binary does not exist, the hook shows a warning and permits the commit.
+- A pre-commit hook regenerates the skill when a commit contains a rule file. Copy [`hooks/pre-commit.example`](hooks/pre-commit.example) and set its variables. The hook runs the generator binary directly, without SwiftPM. It uses the [prebuilt generator](#prebuilt-generator) of your Harmonize release, or the generator that SwiftPM built in your rules package. If it finds no generator, the hook shows a warning and allows the commit.
 - A CI check regenerates the skill and fails when the result differs from the commit:
 
   ```yaml
@@ -308,6 +308,33 @@ To keep the generated skill up to date with your lint rules, use these two mecha
       git add -A -- .agents/skills/harmonize
       git diff --cached --quiet || { git diff --cached --stat; exit 1; }
   ```
+
+### Prebuilt generator
+
+Each GitHub release contains a release build of the generator. It runs on Apple silicon Macs with macOS 13 or later. The release has two files for the generator:
+
+- `harmonize-skills-macos-arm64.tar.gz`: the `harmonize-skills` binary
+- `harmonize-skills-macos-arm64.tar.gz.sha256`: the SHA-256 checksum of the archive
+
+With the prebuilt generator, your developers do not need to build the generator. The pre-commit hook downloads it on the first commit that changes a rule.
+
+To use the prebuilt generator, do these steps:
+
+1. Download the archive of your Harmonize release:
+
+   ```bash
+   gh release download <version> --repo perrystreetsoftware/Harmonize --pattern 'harmonize-skills-macos-arm64.tar.gz*'
+   ```
+
+2. Make sure that the Harmonize release workflow built the archive:
+
+   ```bash
+   gh attestation verify harmonize-skills-macos-arm64.tar.gz --repo perrystreetsoftware/Harmonize
+   ```
+
+3. In your pre-commit hook, set `HARMONIZE_VERSION` to the release tag.
+
+4. In your pre-commit hook, set `HARMONIZE_SKILLS_SHA256` to the checksum in the `.sha256` file. The hook does not use a downloaded generator that has a different checksum.
 
 ### Claude Code plugin
 
