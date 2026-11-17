@@ -53,12 +53,12 @@ prebuilt_skills_tool() {
 }
 
 if git diff --cached --name-only --diff-filter=ADMR -- "$RULES_PACKAGE/Tests/*.swift" | grep -q .; then
-  SKILLS_TOOL=$(prebuilt_skills_tool)
+  SKILLS_TOOL=$(prebuilt_skills_tool) || true
   if [ -z "$SKILLS_TOOL" ]; then
     # Different SwiftPM versions build the plugin tool into different folders, for example
     # .build/out/Products/Debug/HarmonizeSkills or .build/plugins/tools/debug/HarmonizeSkills-tool.
     SKILLS_TOOL=$(find "$RULES_PACKAGE/.build" -maxdepth 6 -type f -perm -u+x \
-      \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1)
+      \( -name HarmonizeSkills -o -name HarmonizeSkills-tool \) -not -path "*.dSYM*" 2>/dev/null | head -1) || true
   fi
 
   if [ -n "$SKILLS_TOOL" ]; then
