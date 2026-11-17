@@ -34,15 +34,15 @@ prebuilt_skills_tool() {
   cache="$cache_root/$HARMONIZE_SKILLS_SHA256"
 
   if [ ! -x "$cache/harmonize-skills" ]; then
-    tmp=$(mktemp -d "${TMPDIR:-/tmp}/harmonize-skills.XXXXXX") || return 1
+    mkdir -p "$cache_root" || return 1
+    tmp=$(mktemp -d "$cache_root/.download.XXXXXX") || return 1
     if curl -fsSL --connect-timeout 5 --max-time 60 -o "$tmp/$asset" \
          "https://github.com/perrystreetsoftware/Harmonize/releases/download/$HARMONIZE_VERSION/$asset" \
        && echo "$HARMONIZE_SKILLS_SHA256  $tmp/$asset" | shasum -a 256 -c -s \
-       && tar -xzf "$tmp/$asset" -C "$tmp" harmonize-skills; then
-      rm -f "$tmp/$asset"
-      rm -rf "$cache_root"   # deletes the generators of other releases
-      mkdir -p "$cache_root"
-      mv "$tmp" "$cache"
+       && tar -xzf "$tmp/$asset" -C "$tmp" harmonize-skills \
+       && mkdir -p "$cache" \
+       && mv -f "$tmp/harmonize-skills" "$cache/harmonize-skills"; then
+      rm -rf "$tmp"
     else
       rm -rf "$tmp"
       echo "pre-commit: WARNING: the hook could not download the harmonize-skills $HARMONIZE_VERSION generator, or its checksum is not HARMONIZE_SKILLS_SHA256." >&2
