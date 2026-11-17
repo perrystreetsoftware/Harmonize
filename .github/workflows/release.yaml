@@ -1,0 +1,55 @@
+name: Release
+
+# Builds the harmonize-skills generator in release mode. Attaches the binary to the GitHub release.
+# The pre-commit hook of a project can download the binary so that developers won't have to build the generator.
+# See "Prebuilt generator" in README.md.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag of an existing release
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  harmonize-skills:
+    name: harmonize-skills binary
+    runs-on: macos-26
+    timeout-minutes: 30
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      ASSET: harmonize-skills-macos-arm64.tar.gz
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check that the release exists
+        run: gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName
+
+      - uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ env.TAG }}
+
+      - name: Build
+        run: swift build -c release --product harmonize-skills
+
+      - name: Package
+        run: |
+          BIN_DIR=$(swift build -c release --product harmonize-skills --show-bin-path)
+          [ "$(lipo -archs "$BIN_DIR/harmonize-skills")" = "arm64" ]
+          "$BIN_DIR/harmonize-skills" --help > /dev/null
+          tar -czf "$ASSET" -C "$BIN_DIR" harmonize-skills
+          shasum -a 256 "$ASSET" > "$ASSET.sha256"
+          cat "$ASSET.sha256"
+
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: ${{ env.ASSET }}
+
+      - name: Upload to the release
+        run: gh release upload "$TAG" "$ASSET" "$ASSET.sha256" --repo "$GITHUB_REPOSITORY" --clobber
